@@ -37,3 +37,11 @@ def to_dict_recursive(chat_completion_object):
     return d
 
 
+# parents(Item Filteringする条件)とdfが与えられたとき、parentsに沿って抽出したdfを出力
+# 入力: (parents, df)→({"県":"東京都", "年":2022}, df)
+# 出力: new_df
+def filter_df_by_parents(panrents, df):
+    condition = True
+    for k, v in panrents.items():
+        condition &= (df[k]==v)
+    return df[condition]
