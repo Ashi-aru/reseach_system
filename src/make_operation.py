@@ -1,10 +1,12 @@
 
 
 """
+注目属性ごとにAggregation関数を選択する処理の実装
+
 入力: (att_l, att_label_d)=(["売上","従業員数","上場flg"],{"売上":"Quantitative","上場flg":"Categorical",...})
 出力: {"売上":[1,3,5],"従業員数":[1,3,5],"上場flg":[2]}
 """
-def make_operation(att_l, att_label_d):
+def define_aggregation_F(att_l, att_label_d):
     result_d = {}
     operation_d = {
         1:"合計値を計算(sum)",
@@ -26,3 +28,10 @@ def make_operation(att_l, att_label_d):
             user_choice = [int(n) for n in input(instruction+"\n\n"+choices+"\n").split(",")]
         result_d[att_name] = user_choice
     return result_d
+
+
+"""
+注目属性, Aggregation関数, ドリダウン属性の組み合わせごとにScalar Arithmeticの演算子を決定する処理の実装
+
+入力: (operation_att_l, )
+"""
