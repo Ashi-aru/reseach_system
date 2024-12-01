@@ -6,3 +6,4 @@ nbformat
 django
 openai
 pypdf
+pytest
