@@ -69,3 +69,22 @@ class DatafactManager:
         logging.info(self.results[subject_key][operation_key])
         return None
 
+    """
+    重要度の計算結果の保存・更新を行う関数。
+    DatafactManager.significancesに保存。キーはmake_keyで生成したもの。
+    つまり、significances[subject_key][operation_key]=significanceという形。
+    入力:(subject, operation, significance)
+    出力:None
+    """
+    def update_significances(self, subject, operation, significance, makekey_flg=True):
+        if(makekey_flg):
+            subject_key, operation_key = self.make_key(subject, operation)
+        else:
+            subject_key, operation_key = subject, operation
+
+        if(subject_key not in self.significances):
+            self.significances[subject_key] = {operation_key:significance}
+        else:
+            self.significances[subject_key][operation_key] = significance
+        logging.info(self.significances[subject_key][operation_key])
+        return None

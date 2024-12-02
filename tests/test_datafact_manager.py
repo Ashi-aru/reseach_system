@@ -129,3 +129,19 @@ class TestDatafactManager:
     def test_update_results(self, datafact, result, expected_result):
         subject, operation = datafact.subject, datafact.operation
         assert self.manager.update_results(subject=subject, operation=operation, result=result) == expected_result
+
+    @pytest.mark.parametrize("datafact, significance, expected_result", [
+        (
+            DATAFACT1,
+            5.6,
+            None
+        ),
+        (
+            DATAFACT3,
+            2.5,
+            None
+        )
+    ])
+    def test_update_significances(self, datafact, significance, expected_result):
+        subject, operation = datafact.subject, datafact.operation
+        assert self.manager.update_significances(subject=subject, operation=operation, significance=significance) == expected_result
