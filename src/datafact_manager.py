@@ -47,5 +47,25 @@ class DatafactManager:
         else:
             datafact = operation_others[0]
             operation_key = tuple([operation_name, self.make_key(datafact.subject, datafact.operation)])
-
         return (subject_key, operation_key)
+    
+    """
+    計算結果の保存・更新を行う関数。
+    DatafactManager.resultsに保存。キーはmake_keyで生成したもの。
+    つまり、results[subject_key][operation_key]=resultという形。
+    入力:(subject, operation, result)
+    出力:None
+    """
+    def update_results(self, subject, operation, result, makekey_flg=True):
+        if(makekey_flg):
+            subject_key, operation_key = self.make_key(subject, operation)
+        else:
+            subject_key, operation_key = subject, operation
+
+        if(subject_key not in self.results):
+            self.results[subject_key] = {operation_key:result}
+        else:
+            self.results[subject_key][operation_key] = result
+        logging.info(self.results[subject_key][operation_key])
+        return None
+

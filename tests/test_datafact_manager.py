@@ -6,28 +6,11 @@ sys.path.append('/Users/ashikawaharuki/Desktop/research/TDB/test/system/src')
 from datafact_model import Datafact
 from datafact_manager import DatafactManager
 
-
-
-class TestDatafactManager:
-    def setup_method(self):
-        # 各メソッドを実行する際に呼び出される初期化関数
-        self.manager = DatafactManager()
-    
-    @pytest.mark.parametrize("datafact, expected_result", [
-        # Aggregation
-        (
-            Datafact(
+DATAFACT1 = Datafact(
                 subject=[{"県":"東京都", "年":2022}, "大分類", ["製造業"]],
                 operation=["Aggregation", "売上高", "mean"]
-            ),
-            (
-                ((("県","東京都"),("年",2022)), "大分類", ("製造業",)), # subjectのexpected_result
-                ("Aggregation", "売上高", "mean") # operationのexpected_result
-            ),
-        ),
-        # Scalar Arithmetic
-        (
-            Datafact(
+            )
+DATAFACT2 = Datafact(
                 subject=[{"県":"東京都", "年":2022}, "大分類", ["製造業"]],
                 operation=[
                     "ScalarArithmetic", 
@@ -41,26 +24,8 @@ class TestDatafactManager:
                         operation=["Aggregation", "売上高", "mean"]
                     ),
                 ]
-            ),
-            (
-                ((("県","東京都"),("年",2022)), "大分類", ("製造業",)), # ←subject ↓operation
-                (
-                    "ScalarArithmetic", 
-                    "-",
-                    (
-                        ((("県","東京都"),("年",2022)), "大分類", ("製造業",)), # datafact1のsubject
-                        ("Aggregation", "売上高", "mean") # datafact1のoperation
-                    ),
-                    (
-                        ((("県","東京都"),("年",2022)), "大分類", ("サービス業",)), # datafact2のsubject
-                        ("Aggregation", "売上高", "mean") # datafact2のoperation
-                    )
-                )
             )
-        ),
-        # Rank
-        (
-            Datafact(
+DATAFACT3 = Datafact(
                 subject=[{"県":"東京都", "年":2022}, "大分類", ["製造業"]],
                 operation=[
                     "Rank",
@@ -81,7 +46,44 @@ class TestDatafactManager:
                         ]
                     )
                 ]
+            )
+
+class TestDatafactManager:
+    def setup_method(self):
+        # 各メソッドを実行する際に呼び出される初期化関数
+        self.manager = DatafactManager()
+    
+    @pytest.mark.parametrize("datafact, expected_result", [
+        # Aggregation
+        (
+            DATAFACT1,
+            (
+                ((("県","東京都"),("年",2022)), "大分類", ("製造業",)), # subjectのexpected_result
+                ("Aggregation", "売上高", "mean") # operationのexpected_result
             ),
+        ),
+        # Scalar Arithmetic
+        (
+            DATAFACT2,
+            (
+                ((("県","東京都"),("年",2022)), "大分類", ("製造業",)), # ←subject ↓operation
+                (
+                    "ScalarArithmetic", 
+                    "-",
+                    (
+                        ((("県","東京都"),("年",2022)), "大分類", ("製造業",)), # datafact1のsubject
+                        ("Aggregation", "売上高", "mean") # datafact1のoperation
+                    ),
+                    (
+                        ((("県","東京都"),("年",2022)), "大分類", ("サービス業",)), # datafact2のsubject
+                        ("Aggregation", "売上高", "mean") # datafact2のoperation
+                    )
+                )
+            )
+        ),
+        # Rank
+        (
+            DATAFACT3,
             (
                 ((("県","東京都"),("年",2022)), "大分類", ("製造業",)), # ←subject ↓operation
                 (
@@ -112,6 +114,18 @@ class TestDatafactManager:
         subject, operation = datafact.subject, datafact.operation
         assert self.manager.make_key(subject=subject,operation=operation) == expected_result
 
-
-
-        
+    @pytest.mark.parametrize("datafact, result, expected_result", [
+        (
+            DATAFACT1,
+            15,
+            None
+        ),
+        (
+            DATAFACT3,
+            3,
+            None
+        )
+    ])
+    def test_update_results(self, datafact, result, expected_result):
+        subject, operation = datafact.subject, datafact.operation
+        assert self.manager.update_results(subject=subject, operation=operation, result=result) == expected_result
