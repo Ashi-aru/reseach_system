@@ -19,6 +19,7 @@ class DatafactManager:
         self.datafacts = {}
         self.results = {}
         self.significances = {}
+        self.all_d = {"datafacts":self.datafacts,"results":self.results,"significances":self.significances}
 
     """
     results, significancesなどを保存するキーを生成を行う関数。ハッシュ不可能なデータ型をハッシュ可能データがに変更。
@@ -70,6 +71,7 @@ class DatafactManager:
         return None
 
     """
+    TODO: update_significancesとupdate_resultsをまとめる。
     重要度の計算結果の保存・更新を行う関数。
     DatafactManager.significancesに保存。キーはmake_keyで生成したもの。
     つまり、significances[subject_key][operation_key]=significanceという形。
@@ -88,3 +90,17 @@ class DatafactManager:
             self.significances[subject_key][operation_key] = significance
         logging.info(self.significances[subject_key][operation_key])
         return None
+    
+    """
+    datafacts,results,significancesに格納されているデータを検索し返す関数。
+    入力:(subject, operation, selected_d_name)
+        - selected_d: datafacts | results | significances
+    出力:データ値
+    """
+    def search_value(self, subject, operation, selected_d_name):
+        selected_d = self.all_d[selected_d_name]
+        subject_key, operation_key = self.make_key(subject, operation)
+        if((subject_key in selected_d) and (operation_key in selected_d[subject_key])):
+            return selected_d[subject_key][operation_key]
+        else:
+            return None

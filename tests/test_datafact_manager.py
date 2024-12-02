@@ -145,3 +145,19 @@ class TestDatafactManager:
     def test_update_significances(self, datafact, significance, expected_result):
         subject, operation = datafact.subject, datafact.operation
         assert self.manager.update_significances(subject=subject, operation=operation, significance=significance) == expected_result
+    
+    @pytest.mark.parametrize("boolean, datafact, result, selected_d_name, expected_result", [
+        (True,DATAFACT1,5.6,"results",5.6),
+        (False,DATAFACT2,2.5,"results",None),
+        (True,DATAFACT1,5.6,"significances",5.6),
+        (False,DATAFACT2,2.5,"results",None),
+    ])
+    def test_search_value(self, boolean, datafact, result, selected_d_name, expected_result):
+        subject, operation = datafact.subject, datafact.operation
+        if(boolean):
+            if(selected_d_name=="results"):
+                self.manager.update_results(subject, operation, result)
+            elif(selected_d_name=="significances"):
+                self.manager.update_significances(subject, operation, result)
+        
+        assert self.manager.search_value(subject, operation, selected_d_name) == expected_result
