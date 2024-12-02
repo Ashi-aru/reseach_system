@@ -1,7 +1,17 @@
 import pandas as pd
-import operator
 import logging
+from pathlib import Path
+from datetime import date
 
+
+PROJ_DIR = Path(__file__).resolve().parent.parent
+TODAY = date.today().strftime("%Y-%m-%d")
+
+logging.basicConfig(
+        level=logging.INFO,
+        filename=PROJ_DIR/f'log/datafact_manager/{TODAY}.log',
+        format='%(asctime)s\n%(message)s'
+    )
 
 
 class DatafactManager:
@@ -20,9 +30,11 @@ class DatafactManager:
     - operation_key = ("Aggregation", "売上高", "mean")
     """
     def make_key(self, subject, operation):
-        subject_key = (tuple([(k,v) for k,v in subject[0].items()]), subject[1], tuple(subject[2]))
+        subject_key = (tuple([(k,v) for k,v in subject[0].items()]), subject[1], (subject[2][0],))
 
         operation_name, *operation_others = operation
+        # logging.info(operation_others)
+
         if(operation_name=="Aggregation"):
             culumn_name, f_name = operation_others
             operation_key = tuple([operation_name, culumn_name, f_name])

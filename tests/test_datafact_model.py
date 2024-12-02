@@ -1,7 +1,11 @@
 import pytest
+import sys
+sys.path.append('/Users/ashikawaharuki/Desktop/research/TDB/test/system/src')
+
 # 自分で作成したクラス、関数をimport
-from src.datafact_model import Datafact
-from src.datafact_manager import DatafactManager
+from datafact_model import Datafact
+from datafact_manager import DatafactManager
+
 
 
 class TestDatafactManager:
@@ -17,7 +21,7 @@ class TestDatafactManager:
                 operation=["Aggregation", "売上高", "mean"]
             ),
             (
-                ((("県","東京都"),("年",2022)), "大分類", ("製造業")), # subjectのexpected_result
+                ((("県","東京都"),("年",2022)), "大分類", ("製造業",)), # subjectのexpected_result
                 ("Aggregation", "売上高", "mean") # operationのexpected_result
             ),
         ),
@@ -26,7 +30,7 @@ class TestDatafactManager:
             Datafact(
                 subject=[{"県":"東京都", "年":2022}, "大分類", ["製造業"]],
                 operation=[
-                    "scalarArithmetic", 
+                    "ScalarArithmetic", 
                     "-",
                     Datafact(
                         subject=[{"県":"東京都", "年":2022}, "大分類", ["製造業"]],
@@ -39,16 +43,16 @@ class TestDatafactManager:
                 ]
             ),
             (
-                ((("県","東京都"),("年",2022)), "大分類", ("製造業")), # ←subject ↓operation
+                ((("県","東京都"),("年",2022)), "大分類", ("製造業",)), # ←subject ↓operation
                 (
-                    "scalarArithmetic", 
+                    "ScalarArithmetic", 
                     "-",
                     (
-                        ((("県","東京都"),("年",2022)), "大分類", ("製造業")), # datafact1のsubject
+                        ((("県","東京都"),("年",2022)), "大分類", ("製造業",)), # datafact1のsubject
                         ("Aggregation", "売上高", "mean") # datafact1のoperation
                     ),
                     (
-                        ((("県","東京都"),("年",2022)), "大分類", ("サービス業")), # datafact2のsubject
+                        ((("県","東京都"),("年",2022)), "大分類", ("サービス業",)), # datafact2のsubject
                         ("Aggregation", "売上高", "mean") # datafact2のoperation
                     )
                 )
@@ -59,12 +63,12 @@ class TestDatafactManager:
             Datafact(
                 subject=[{"県":"東京都", "年":2022}, "大分類", ["製造業"]],
                 operation=[
-                    "rank",
+                    "Rank",
                     "降順",
                     Datafact(
                         subject=[{"県":"東京都", "年":"*"}, "大分類", ["製造業"]],
                         operation = [
-                            "scalarArithmetic", 
+                            "ScalarArithmetic", 
                             "-",
                             Datafact(
                                 subject=[{"県":"東京都", "年":"n"}, "大分類", ["製造業"]],
@@ -79,21 +83,21 @@ class TestDatafactManager:
                 ]
             ),
             (
-                ((("県","東京都"),("年",2022)), "大分類", ("製造業")), # ←subject ↓operation
+                ((("県","東京都"),("年",2022)), "大分類", ("製造業",)), # ←subject ↓operation
                 (
-                    "rank",
+                    "Rank",
                     "降順",
                     (
-                        ((("県","東京都"),("年","*")), "大分類", ("製造業")),
+                        ((("県","東京都"),("年","*")), "大分類", ("製造業",)),
                         (
-                            "scalarArithmetic", 
+                            "ScalarArithmetic", 
                             "-",
                             (
-                                ((("県","東京都"), ("年","n")), "大分類", ("製造業")),
+                                ((("県","東京都"), ("年","n")), "大分類", ("製造業",)),
                                 ("Aggregation", "売上高", "mean")
                             ),
                             (
-                                (("県","東京都"), ("年","n-1"), "大分類", ("製造業")),
+                                ((("県","東京都"), ("年","n-1")), "大分類", ("製造業",)),
                                 ("Aggregation", "売上高", "mean")
                             ),
                         )
@@ -101,7 +105,9 @@ class TestDatafactManager:
                 )
             )
         )
-    ])
+    ],
+    ids = ["case1","case2","case3"]
+    )
     def test_makekey(self, datafact, expected_result):
         subject, operation = datafact.subject, datafact.operation
         assert self.manager.make_key(subject=subject,operation=operation) == expected_result
