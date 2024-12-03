@@ -67,7 +67,7 @@ class DatafactManager:
             self.results[subject_key] = {operation_key:result}
         else:
             self.results[subject_key][operation_key] = result
-        logging.info(self.results[subject_key][operation_key])
+        # logging.info(self.results[subject_key][operation_key])
         return None
 
     """
@@ -88,7 +88,7 @@ class DatafactManager:
             self.significances[subject_key] = {operation_key:significance}
         else:
             self.significances[subject_key][operation_key] = significance
-        logging.info(self.significances[subject_key][operation_key])
+        # logging.info(self.significances[subject_key][operation_key])
         return None
     
     """
