@@ -29,6 +29,9 @@ class Datafact:
     # operationを実行し、結果をresultインスタンスに保存
     """
     ドリルダウンの木構造における、ノードの計算を実施する関数
+    入力
+    - manager: DatafactManagerインスタンス(計算結果を保存したり、取り出したり)
+    - df: dataframe
     """
     def handle_datafact(self, manager, df=None):
         parents, column_name, filter_values = self.subject
