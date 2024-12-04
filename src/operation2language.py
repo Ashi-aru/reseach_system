@@ -169,4 +169,19 @@ def ValueSelection(request):
     return f"「{index_name}=={index_value}であるという条件で{value_attribute}値を抽出」"
 
 
-
+# ----------------------------------------------------
+"""
+subjectからItemFiltering用のリクエスト（問い合わせ）を生成する関数
+入力: subject
+出力: ItemFilteringのリクエスト
+"""
+def generate_IF_request(subject):
+    parents, col_name, filter_values = subject
+    requests_l = [["in", ["Attribute",k], [v]] for k, v in parents.items() if(v!="*")]
+    request = [] if(len(requests_l)==0) else requests_l[0] 
+    for next_request in requests_l[1:]:
+        request = ["and", request, next_request] if(request!=[]) else next_request
+    if(filter_values!=["*"]):
+        final_request = ["in",["Attribute",col_name],filter_values]
+        request = ["and", request, final_request] if(request!=[]) else final_request
+    return request
