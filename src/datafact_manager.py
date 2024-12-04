@@ -61,7 +61,7 @@ class DatafactManager:
     """
     各データの保存・更新を行う関数。
     DatafactManager.results/significances/templates/sentencesに保存。キーはmake_keyで生成したもの。
-    つまり、results[subject_key][operation_key]=resultという形。
+    呼び出した際の可読性を向上させるために、関数名にはupdateする対象物(results/significances/..)を残している。
     入力:(subject, operation, update_data, data_type, makekey_flg)
     出力:None
     """
