@@ -105,11 +105,6 @@ class Datafact:
         - result_d 例: {2021:v1, 2022:v2, ...}
     """
     def handle_datafacts(self, manager, ordinal_d=None, df=None):
-        # for k, v in manager.results.items():
-        #     # logging.info(k)
-        #     for k_, v_ in v.items():
-        #         # logging.info(f'  {k_}')
-        #         # logging.info(f'  {v_}')
         parents, column_name, filter_values = self.subject
         operation_name, *operation_others = self.operation
         # Aggregation,Rankでは、Operationは全てのデータファクトで共通となる。
@@ -153,26 +148,15 @@ class Datafact:
                     if(v=="*"): 
                         sig_key = k
                 for i in range(len(ordinal_d[sig_key])-1):
-                    logging.info("-----------------------\n")
                     n_parents1 = copy.deepcopy(parents)
                     n_parents1[sig_key] = ordinal_d[sig_key][i]
                     n_datafact1 = Datafact(subject=[n_parents1, column_name_, filter_values_], operation=datafact1.operation)
-                    logging.info(f'datafact1  subject:{n_datafact1.subject}, operation:{n_datafact1.operation}')
+                    
                     n_parents2 = copy.deepcopy(parents)
                     n_parents2[sig_key] = ordinal_d[sig_key][i+1]
                     n_datafact2 = Datafact(subject=[n_parents2, column_name_, filter_values_], operation=datafact2.operation)
-                    logging.info(f'datafact2  subject:{n_datafact2.subject}, operation:{n_datafact2.operation}')
-                    logging.info(f'datafact1  subject:{n_datafact1.subject}, operation:{n_datafact1.operation}')
 
                     n_operation = ["ScalarArithmetic", operator, n_datafact1, n_datafact2]
-                    logging.info(n_operation)
-
-                    logging.info(f'n_datafact1 subject:{n_datafact1.subject}')
-                    subject_key, operation_key = manager.make_key(n_datafact1.subject, n_operation)
-                    logging.info(f'key:{subject_key}')
-                    logging.info(manager.results[subject_key])
-
-
                     result_d[ordinal_d[sig_key][i]] = manager.search_value(n_datafact1.subject, n_operation, "results")
             manager.update_results(self.subject, self.operation, result=result_d)
         # TODO:残りの三つの操作に対応
