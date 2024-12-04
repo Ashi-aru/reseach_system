@@ -19,7 +19,15 @@ class DatafactManager:
         self.datafacts = {}
         self.results = {}
         self.significances = {}
-        self.all_d = {"datafacts":self.datafacts,"results":self.results,"significances":self.significances}
+        self.templates = {}
+        self.sentences = {}
+        self.all_d = {
+            "datafacts":self.datafacts,
+            "results":self.results,
+            "significances":self.significances,
+            "templates":self.templates,
+            "sentences":self.sentences
+        }
 
     """
     results, significancesなどを保存するキーを生成を行う関数。ハッシュ不可能なデータ型をハッシュ可能データがに変更。
@@ -51,44 +59,40 @@ class DatafactManager:
         return (subject_key, operation_key)
     
     """
-    計算結果の保存・更新を行う関数。
-    DatafactManager.resultsに保存。キーはmake_keyで生成したもの。
+    各データの保存・更新を行う関数。
+    DatafactManager.results/significances/templates/sentencesに保存。キーはmake_keyで生成したもの。
     つまり、results[subject_key][operation_key]=resultという形。
-    入力:(subject, operation, result)
+    入力:(subject, operation, update_data, data_type, makekey_flg)
     出力:None
     """
-    def update_results(self, subject, operation, result, makekey_flg=True):
+    def update_data(self, subject, operation, update_data, data_type, makekey_flg=True):
+        data_d = self.all_d[data_type]
         if(makekey_flg):
             subject_key, operation_key = self.make_key(subject, operation)
         else:
             subject_key, operation_key = subject, operation
 
-        if(subject_key not in self.results):
-            self.results[subject_key] = {operation_key:result}
+        if(subject_key not in data_d):
+            data_d[subject_key] = {operation_key:update_data}
         else:
-            self.results[subject_key][operation_key] = result
-        # logging.info(self.results[subject_key][operation_key])
+            data_d[subject_key][operation_key] = update_data
+        # logging.info(self.significances[subject_key][operation_key])
         return None
 
-    """
-    TODO: update_significancesとupdate_resultsをまとめる。
-    重要度の計算結果の保存・更新を行う関数。
-    DatafactManager.significancesに保存。キーはmake_keyで生成したもの。
-    つまり、significances[subject_key][operation_key]=significanceという形。
-    入力:(subject, operation, significance)
-    出力:None
-    """
-    def update_significances(self, subject, operation, significance, makekey_flg=True):
-        if(makekey_flg):
-            subject_key, operation_key = self.make_key(subject, operation)
-        else:
-            subject_key, operation_key = subject, operation
+    def update_results(self, subject, operation, result, makekey_flg=True):
+        self.update_data(subject, operation, result, "results", makekey_flg)
+        return None
 
-        if(subject_key not in self.significances):
-            self.significances[subject_key] = {operation_key:significance}
-        else:
-            self.significances[subject_key][operation_key] = significance
-        # logging.info(self.significances[subject_key][operation_key])
+    def update_significances(self, subject, operation, significance, makekey_flg=True):
+        self.update_data(subject, operation, significance, "significances", makekey_flg)
+        return None
+    
+    def update_templates(self, subject, operation, template, makekey_flg=True):
+        self.update_data(subject, operation, template, "templates", makekey_flg)
+        return None
+
+    def update_sentences(self, subject, operation, sentence, makekey_flg=True):
+        self.update_data(subject, operation, sentence, "sentences", makekey_flg)
         return None
     
     """
