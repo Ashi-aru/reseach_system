@@ -66,8 +66,8 @@ class Datafact:
         elif(operation_name=="ScalarArithmetic"):
             # Operation:["ScalarArithmetic", 演算子, datafact1, datafact2]
             op, datafact1, datafact2 = operation_others
-            result1 = manager.search_value(datafact1.subject, datafact1.operation, "results")
-            result2 = manager.search_value(datafact2.subject, datafact2.operation, "results")
+            result1 = manager.search_result(datafact1.subject, datafact1.operation)
+            result2 = manager.search_result(datafact2.subject, datafact2.operation)
             operators = {"+": operator.add,"-": operator.sub,"*": operator.mul,"/": operator.truediv}
             result = operators[op](result1, result2)
             # logging.info(result)
@@ -78,12 +78,12 @@ class Datafact:
             # datafacts（群）:[[{"k":"v"}, "brabra", ["*"]], 演算内容] or [[{"brabra":"*"}, "k", ["v"]], 演算内容]
             order, datafacts = operation_others
             subject2, operation2 = datafacts.subject, datafacts.operation
-            ranks_d = manager.search_value(subject2, self.operation, "results")
+            ranks_d = manager.search_result(subject2, self.operation)
             if(ranks_d is not None):
                 # logging.info(ranks_d[filter_values[0]])
                 manager.update_results(self.subject,self.operation,result=ranks_d[filter_values[0]])
             else:
-                results_d = manager.search_value(subject2,operation2,"results")
+                results_d = manager.search_result(subject2,operation2)
                 if(results_d is not None):
                     # results_dは{"k1":v1,"k2":v2,...}という形を想定
                     order = True if(order=="降順") else False
@@ -113,7 +113,7 @@ class Datafact:
                 raise ValueError("dfが必要なのに引数に指定されていません！")
             if(filter_values==["*"]):
                 result_d = dict([
-                    (fv,manager.search_value([parents, column_name, [fv]], self.operation, "results")) 
+                    (fv,manager.search_result([parents, column_name, [fv]], self.operation)) 
                     for fv in df[column_name].unique()
                 ])
             else:
@@ -124,7 +124,7 @@ class Datafact:
                 for v_tmp in df[sig_key].unique():
                     n_parents = copy.deepcopy(parents)
                     n_parents[sig_key] = v_tmp
-                    result_d[v_tmp] = manager.search_value([n_parents, column_name, filter_values], self.operation, "results")
+                    result_d[v_tmp] = manager.search_result([n_parents, column_name, filter_values], self.operation)
             manager.update_results(self.subject, self.operation, result=result_d)
         # ScalarArithmeticだけは少し特殊
         elif(operation_name=="ScalarArithmetic"):
@@ -139,7 +139,7 @@ class Datafact:
                     n_datafact1 = Datafact(subject=[parents_, column_name_, [ordinal_d[column_name_][i]]], operation=datafact1.operation)
                     n_datafact2 = Datafact(subject=[parents_, column_name_, [ordinal_d[column_name_][i+1]]], operation=datafact2.operation)
                     n_operation = ["ScalarArithmetic", operator, n_datafact1, n_datafact2]
-                    result_d[ordinal_d[column_name_][i]] = manager.search_value(n_datafact1.subject, n_operation, "results")
+                    result_d[ordinal_d[column_name_][i]] = manager.search_result(n_datafact1.subject, n_operation)
                     
             else:
                 _, column_name_, filter_values_ = datafact1.subject
@@ -157,7 +157,7 @@ class Datafact:
                     n_datafact2 = Datafact(subject=[n_parents2, column_name_, filter_values_], operation=datafact2.operation)
 
                     n_operation = ["ScalarArithmetic", operator, n_datafact1, n_datafact2]
-                    result_d[ordinal_d[sig_key][i]] = manager.search_value(n_datafact1.subject, n_operation, "results")
+                    result_d[ordinal_d[sig_key][i]] = manager.search_result(n_datafact1.subject, n_operation)
             manager.update_results(self.subject, self.operation, result=result_d)
         # TODO:残りの三つの操作に対応
         elif(operation_name in ["Trend","Extreme","Outlier"]):

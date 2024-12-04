@@ -151,5 +151,5 @@ class TestDatafact:
     )
     def test_handle_datafact(self, datafact, manager, df, expected_result):
         datafact.handle_datafact(manager, df)
-        result = manager.search_value(datafact.subject,datafact.operation,"results")
+        result = manager.search_result(datafact.subject,datafact.operation)
         assert  result== expected_result

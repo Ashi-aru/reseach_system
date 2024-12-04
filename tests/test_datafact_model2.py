@@ -39,7 +39,7 @@ for y in range(2018, 2025):
     df_y = df[df["y"]==str(y)]
     datafact1.handle_datafact(manager, df_MA)
     datafact2.handle_datafact(manager, df_y)
-    result = manager.search_value(datafact1.subject, datafact1.operation, "results")
+    result = manager.search_result(datafact1.subject, datafact1.operation)
     if(not np.isnan(result)): 
         result_d1[str(y)]=result
 # ScalarArithmeticバージョン
@@ -73,7 +73,7 @@ for y in range(2019, 2025):
     )
     datafact1.handle_datafact(manager)
     datafact2.handle_datafact(manager)
-    result = manager.search_value(datafact1.subject, datafact1.operation, "results")
+    result = manager.search_result(datafact1.subject, datafact1.operation)
     result_d2[str(y)]=result
 
 
@@ -151,5 +151,5 @@ class TestDatafact:
     )
     def test_handle_datafacts(self, datafact, manager, df, ordinal_d, expected_result):
         datafact.handle_datafacts(manager, ordinal_d, df)
-        result = manager.search_value(datafact.subject,datafact.operation,"results")
+        result = manager.search_result(datafact.subject,datafact.operation)
         assert  result== expected_result

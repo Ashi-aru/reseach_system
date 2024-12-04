@@ -108,3 +108,15 @@ class DatafactManager:
             return selected_d[subject_key][operation_key]
         else:
             return None
+        
+    def search_result(self, subject, operation):
+        return self.search_value(subject, operation, "results")
+    
+    def search_significance(self, subject, operation):
+        return self.search_value(subject, operation, "significances")
+    
+    def search_template(self, subject, operation):
+        return self.search_value(subject, operation, "templates")
+    
+    def search_sentence(self, subject, operation):
+        return self.search_value(subject, operation, "sentences")
