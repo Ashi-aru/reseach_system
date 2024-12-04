@@ -2,6 +2,7 @@ import operator
 import logging
 from pathlib import Path
 from datetime import date
+import copy
 # 自分が定義したクラス、関数をインポート
 from datafact_manager import DatafactManager
 
@@ -29,9 +30,11 @@ class Datafact:
     # operationを実行し、結果をresultインスタンスに保存
     """
     ドリルダウンの木構造における、ノードの計算を実施する関数
-    入力
+    入力:
     - manager: DatafactManagerインスタンス(計算結果を保存したり、取り出したり)
     - df: dataframe
+    出力:
+    - None(計算結果はDatafactManager.resultsに保存)
     """
     def handle_datafact(self, manager, df=None):
         parents, column_name, filter_values = self.subject
@@ -95,3 +98,85 @@ class Datafact:
         else:
             raise ValueError("サポートしていないOperation名を書くな！")
     
+    """
+    datafactsについての計算を行う関数。つまり、各ノードの計算結果をグループごとにまとめる関数
+    出力
+    - None(計算結果はresult_dをDatafactManager.resultsに保存)
+        - result_d 例: {2021:v1, 2022:v2, ...}
+    """
+    def handle_datafacts(self, manager, ordinal_d=None, df=None):
+        # for k, v in manager.results.items():
+        #     # logging.info(k)
+        #     for k_, v_ in v.items():
+        #         # logging.info(f'  {k_}')
+        #         # logging.info(f'  {v_}')
+        parents, column_name, filter_values = self.subject
+        operation_name, *operation_others = self.operation
+        # Aggregation,Rankでは、Operationは全てのデータファクトで共通となる。
+        if(operation_name=="Aggregation" or operation_name=="Rank"):
+            if(df is None):
+                raise ValueError("dfが必要なのに引数に指定されていません！")
+            if(filter_values==["*"]):
+                result_d = dict([
+                    (fv,manager.search_value([parents, column_name, [fv]], self.operation, "results")) 
+                    for fv in df[column_name].unique()
+                ])
+            else:
+                for k, v in parents.items():
+                    if(v=="*"): 
+                        sig_key = k
+                result_d = {}
+                for v_tmp in df[sig_key].unique():
+                    n_parents = copy.deepcopy(parents)
+                    n_parents[sig_key] = v_tmp
+                    result_d[v_tmp] = manager.search_value([n_parents, column_name, filter_values], self.operation, "results")
+            manager.update_results(self.subject, self.operation, result=result_d)
+        # ScalarArithmeticだけは少し特殊
+        elif(operation_name=="ScalarArithmetic"):
+            operator, datafact1, datafact2 = operation_others
+            result_d = {}
+            if(ordinal_d is None):
+                raise ValueError("ordinal_dが必要なのに引数に指定されていません！")
+            if(filter_values==["*"]):
+                parents_, column_name_, _ = datafact1.subject
+                parents_, column_name_, _ = datafact2.subject
+                for i in range(len(ordinal_d[column_name_])-1):
+                    n_datafact1 = Datafact(subject=[parents_, column_name_, [ordinal_d[column_name_][i]]], operation=datafact1.operation)
+                    n_datafact2 = Datafact(subject=[parents_, column_name_, [ordinal_d[column_name_][i+1]]], operation=datafact2.operation)
+                    n_operation = ["ScalarArithmetic", operator, n_datafact1, n_datafact2]
+                    result_d[ordinal_d[column_name_][i]] = manager.search_value(n_datafact1.subject, n_operation, "results")
+                    
+            else:
+                _, column_name_, filter_values_ = datafact1.subject
+                _, column_name_, filter_values_ = datafact2.subject
+                for k, v in parents.items():
+                    if(v=="*"): 
+                        sig_key = k
+                for i in range(len(ordinal_d[sig_key])-1):
+                    logging.info("-----------------------\n")
+                    n_parents1 = copy.deepcopy(parents)
+                    n_parents1[sig_key] = ordinal_d[sig_key][i]
+                    n_datafact1 = Datafact(subject=[n_parents1, column_name_, filter_values_], operation=datafact1.operation)
+                    logging.info(f'datafact1  subject:{n_datafact1.subject}, operation:{n_datafact1.operation}')
+                    n_parents2 = copy.deepcopy(parents)
+                    n_parents2[sig_key] = ordinal_d[sig_key][i+1]
+                    n_datafact2 = Datafact(subject=[n_parents2, column_name_, filter_values_], operation=datafact2.operation)
+                    logging.info(f'datafact2  subject:{n_datafact2.subject}, operation:{n_datafact2.operation}')
+                    logging.info(f'datafact1  subject:{n_datafact1.subject}, operation:{n_datafact1.operation}')
+
+                    n_operation = ["ScalarArithmetic", operator, n_datafact1, n_datafact2]
+                    logging.info(n_operation)
+
+                    logging.info(f'n_datafact1 subject:{n_datafact1.subject}')
+                    subject_key, operation_key = manager.make_key(n_datafact1.subject, n_operation)
+                    logging.info(f'key:{subject_key}')
+                    logging.info(manager.results[subject_key])
+
+
+                    result_d[ordinal_d[sig_key][i]] = manager.search_value(n_datafact1.subject, n_operation, "results")
+            manager.update_results(self.subject, self.operation, result=result_d)
+        # TODO:残りの三つの操作に対応
+        elif(operation_name in ["Trend","Extreme","Outlier"]):
+            return None
+        else:
+            raise ValueError("登録されていないOperation名です！")
