@@ -5,7 +5,8 @@
 # 出力例：'売上の合計値'
 def Aggregation(request):
     attribute, func = request
-    d_func = {'mean':'平均値','count':'データ数','sum':'合計値','min':'最小値','max':'最大値','median':'中央値','nunique':'ユニークな値の数','unique':'ユニークな値'}
+    d_func = {'sum':'合計値','sum_percent':'合計値の割合','mean':'平均値','max':'最大値','min':'最小値','median':'中央値','count':'データ数','count_percent':'データ数の割合','nunique':'ユニークな値の数','unique':'ユニークな値'}
+    # d_func = {'mean':'平均値','count':'データ数','sum':'合計値','min':'最小値','max':'最大値','median':'中央値','nunique':'ユニークな値の数','unique':'ユニークな値'}
     T = d_func[func] if(attribute=="") else f'{attribute}の{d_func[func]}'
     return T
 
@@ -55,7 +56,8 @@ def Difference(request):
 # 出力例：「属性"年"の値によって分けられるグループ毎に、売上の最大値とその値をとる企業名を集計したdf」
 def GroupingOperation(request):
     func, groups, attributes = request
-    d_func_QA = {'mean':'平均値','count':'データ数','sum':'合計値','min':'最小値','max':'最大値','median':'中央値'}
+    d_func_QA = {'sum':'合計値','sum_percent':'合計値の割合','mean':'平均値','max':'最大値','min':'最小値','median':'中央値','count':'データ数','count_percent':'データ数の割合','nunique':'ユニークな値の数','unique':'ユニークな値'}
+    # d_func_QA = {'mean':'平均値','count':'データ数','sum':'合計値','min':'最小値','max':'最大値','median':'中央値'}
     T1 = '属性"'+','.join(groups)+'"の値によって分けられるグループ毎に'
     t2 = f'{attributes[0]}の{d_func_QA[func]}' if(attributes[0]!="") else f'{d_func_QA[func]}'
     T2 = f'{t2}を集計した属性' if(len(attributes)==1) else f'{t2}とその値をとる{attributes[1]}を集計したdf'
@@ -147,13 +149,26 @@ def ScalarArithmetic(request):
     else:
         return f'{request[1]}と{request[2]}の{operator_d[operator]}'
 
-# 問い合わせ形式：[`"attribute名"`, `0 or 1`]
-# 入力例：["売上", 0]
+# 問い合わせ形式:[対象データ（Attribute）, シフトする差分（+1だと下にずらす）]
+def Shift(request):
+    target_data, shift_diff = request
+    vector = "下" if(shift_diff>0) else "上"
+    return f'{target_data}を{vector}に{shift_diff}ずらした列を生成'
+
+# 問い合わせ形式：[`"attribute名"`, `昇順 or 降順`]
+# 入力例：["売上", 昇順]
 # 出力例：'「売上を昇順でソートしたdfを生成」'
 def Sort(request):
-    attribute, num = request
-    d = {0:"昇順", 1:"降順"}
-    return f'「{attribute}を{d[num]}でソートしたdfを生成」'
+    attribute, order = request
+    # d = {0:"昇順", 1:"降順"}
+    return f'「{attribute}を{order}でソートしたdfを生成」'
+
+# 問い合わせ形式：[`"対象データ名"`, `"O_attribute名"`, `ordinal_d`]
+# 入力例：["売上", "年", {"年":[2021,2022,2023,2024]}]
+# 出力例：'「売上を昇順でソートしたdfを生成」'
+def Sort_ordinal_d(request):
+    target_data, O_attribute, ordinal_d = request
+    return f"{target_data}を{O_attribute}={ordinal_d[O_attribute]}の順で並び替えたdfを生成"
 
 # 問い合わせ形式：[set1, set2]
 def Union(request):
