@@ -45,3 +45,26 @@ def filter_df_by_parents(panrents, df):
     for k, v in panrents.items():
         condition &= (df[k]==v)
     return df[condition]
+
+"""
+datafact.subjectが与えられた時に、datafact or datafactsを判定。
+datafactsの場合は、何の集合か（年?県?）を示すAttribute名も返す
+入力: datafact.subject
+出力: [True/False, Attribute名]
+"""
+def is_datafacts(subject):
+    parents, col_name, filter_values = subject
+    is_datafacts = (
+            filter_values==["*"] or ("*" in parents.values())
+            or
+            filter_values!=['n'] or ('n' in parents.values())
+            or
+            filter_values!=['n-1'] or ('n-1' in parents.values())
+        )
+    if(filter_values==["*"]): 
+        key_attr = col_name
+    else:
+        for k, v in parents.items():
+            if(v=="*"):
+                key_attr = k
+    return [is_datafacts, key_attr]
