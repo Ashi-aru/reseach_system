@@ -5,6 +5,8 @@ from datetime import date
 import copy
 # 自分が定義したクラス、関数をインポート
 from datafact_manager import DatafactManager
+from operation2language import Aggregation, AttributeArithmetic, AttributeScalarArithmetic, AttributeSelection, Difference, GroupingOperation, ItemFiltering, ScalarArithmetic, Shift, Sort ,Sort_ordinal_d, ValueSelection, generate_IF_request
+from others import is_datafacts
 
 
 PROJ_DIR = Path(__file__).resolve().parent.parent
@@ -162,5 +164,57 @@ class Datafact:
         # TODO:残りの三つの操作に対応
         elif(operation_name in ["Trend","Extreme","Outlier"]):
             return None
+        else:
+            raise ValueError("登録されていないOperation名です！")
+
+    """
+    データファクトを受け取り、データ操作の言語化を行い、保存・出力を行う関数
+    入力: datafact(self)
+    出力: データ操作フローを言語化したもの(辞書)
+    """
+    # NOTE: Rank,ScalarArithmeticの時は、ordinal_dは常に引数に入れるのが無難かも
+    def translate_operationflow(self, ordinal_d=None):
+        parents, col_name, filter_values = self.subject
+        operation_name, *operation_others = self.operation
+        is_datafacts, key_attr = is_datafacts(subject=self.subject)
+
+        operationflow_l = []
+        if(operation_name == "Aggregation"):
+            aggregation_col, f_name = operation_others
+            if(is_datafacts):
+                operationflow_l.append(ItemFiltering(generate_IF_request(self.subject)))
+                operationflow_l.append(GroupingOperation([f_name,[col_name],[aggregation_col]]))
+            else:
+                operationflow_l.append(ItemFiltering(generate_IF_request(self.subject)))
+                operationflow_l.append(Aggregation([aggregation_col, f_name]))
+            return operationflow_l
+
+        elif(operation_name == "ScalarArithmetic"):
+            op, datafact1, datafact2 = operation_others
+            if(is_datafacts):
+                """
+                Aggregation,Rankのdatafactsの対応 → Ordinal Attributeの順に並び替え → 上に1つ分シフトした列を生成 → AttributeArithmetic
+                """
+                if(ordinal_d is None):
+                    raise ValueError("ordinal_dが必要なのに引数に指定されていません！")
+                operationflow_l.append(datafact1.tranlate_operation(ordinal_d))
+                num = len(operationflow_l)-1
+                operationflow_l.append(Sort_ordinal_d([f'operationflow_l[{num}]',key_attr, ordinal_d]))
+                operationflow_l.append(Shift([f'operationflow_l[{num+1}]',1]))
+                operationflow_l.append(AttributeArithmetic[op, f'operationflow_l[{num+1}]', f'operationflow_l[{num+2}]'])
+            else:
+                operationflow_l.append(datafact1.translate_operation())
+                operationflow_l.append(datafact2.translate_operation())
+                num = len(operationflow_l)-1
+                operationflow_l.append(ScalarArithmetic(op,f'operationflow_l[{num-1}]',f'operationflow_l[{num}]'))
+            return operationflow_l
+    
+        elif(operation_name == "Rank"):
+            order, datafacts = operation_others
+            operationflow_l.append(datafacts.translate_operation(ordinal_d))
+            operationflow_l.append(Sort([f'operationflow_l[{len(operationflow_l)-1}]', order]))
+            if(not is_datafacts):
+                operationflow_l.append(ValueSelection([[col_name, filter_values[0]], "順位"]))
+            return operationflow_l
         else:
             raise ValueError("登録されていないOperation名です！")
