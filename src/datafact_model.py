@@ -2,11 +2,13 @@ import operator
 import logging
 from pathlib import Path
 from datetime import date
+import json
+import re
 import copy
 # 自分が定義したクラス、関数をインポート
 from datafact_manager import DatafactManager
 from operation2language import Aggregation, AttributeArithmetic, AttributeScalarArithmetic, AttributeSelection, Difference, GroupingOperation, ItemFiltering, ScalarArithmetic, Shift, Sort ,Sort_ordinal_d, ValueSelection, generate_IF_request
-from others import is_datafacts
+from others import is_datafacts as Is_datafacts
 
 
 PROJ_DIR = Path(__file__).resolve().parent.parent
@@ -173,48 +175,53 @@ class Datafact:
     出力: データ操作フローを言語化したもの(辞書)
     """
     # NOTE: Rank,ScalarArithmeticの時は、ordinal_dは常に引数に入れるのが無難かも
-    def translate_operationflow(self, ordinal_d=None):
-        parents, col_name, filter_values = self.subject
-        operation_name, *operation_others = self.operation
-        is_datafacts, key_attr = is_datafacts(subject=self.subject)
+    def convert_datafact_to_operationflow(self, ordinal_d=None):
+        def numbering(n,k):
+            return f"{n}.{k}" if(n!="t") else f"t{k}"
+        
+        def datafact2flow_d(self=self, ordinal_d=ordinal_d, n="t"):
+            parents, col_name, filter_values = self.subject
+            operation_name, *operation_others = self.operation
+            is_datafacts, key_attr = Is_datafacts(subject=self.subject)
+            flow_d = {}
+            if(operation_name == "Aggregation"):
+                aggregation_col, f_name = operation_others
+                if(is_datafacts):
+                    flow_d[numbering(n,1)]=ItemFiltering(generate_IF_request(self.subject))
+                    flow_d[numbering(n,2)]=GroupingOperation([f_name,[col_name],[aggregation_col]])
+                else:
+                    flow_d[numbering(n,1)]=ItemFiltering(generate_IF_request(self.subject))
+                    flow_d[numbering(n,2)]=Aggregation([aggregation_col, f_name])
+                return flow_d
 
-        operationflow_l = []
-        if(operation_name == "Aggregation"):
-            aggregation_col, f_name = operation_others
-            if(is_datafacts):
-                operationflow_l.append(ItemFiltering(generate_IF_request(self.subject)))
-                operationflow_l.append(GroupingOperation([f_name,[col_name],[aggregation_col]]))
+            elif(operation_name == "ScalarArithmetic"):
+                op, datafact1, datafact2 = operation_others
+                if(is_datafacts):
+                    """
+                    Aggregation,Rankのdatafactsの対応 → Ordinal Attributeの順に並び替え → 上に1つ分シフトした列を生成 → AttributeArithmetic
+                    """
+                    if(ordinal_d is None):
+                        raise ValueError("ordinal_dが必要なのに引数に指定されていません！")
+                    flow_d[numbering(n,1)]=datafact2flow_d(datafact1,ordinal_d,n=numbering(n,1))
+                    flow_d[numbering(n,2)]=Sort_ordinal_d([numbering(n,1),key_attr, ordinal_d])
+                    flow_d[numbering(n,3)]=Shift([numbering(n,2),1])
+                    flow_d[numbering(n,4)]=AttributeArithmetic([op, [numbering(n,2), numbering(n,3)]])
+                else:
+                    flow_d[numbering(n,1)]=datafact2flow_d(datafact1,n=numbering(n,1))
+                    flow_d[numbering(n,2)]=datafact2flow_d(datafact2,n=numbering(n,2))
+                    flow_d[numbering(n,3)]=ScalarArithmetic([op,numbering(n,1),numbering(n,2)])
+                return flow_d
+        
+            elif(operation_name == "Rank"):
+                order, datafacts = operation_others
+                flow_d[numbering(n,1)]=datafact2flow_d(datafacts,ordinal_d,n=numbering(n,1))
+                flow_d[numbering(n,2)]=Sort([numbering(n,1), order])
+                if(not is_datafacts):
+                    flow_d[numbering(n,3)]=ValueSelection([[col_name, filter_values[0]], "順位"])
+                return flow_d
             else:
-                operationflow_l.append(ItemFiltering(generate_IF_request(self.subject)))
-                operationflow_l.append(Aggregation([aggregation_col, f_name]))
-            return operationflow_l
+                raise ValueError("登録されていないOperation名です！")
+        flow_d = datafact2flow_d()
+        logging.info(json.dumps(flow_d,ensure_ascii=False,indent=4))
+        return flow_d
 
-        elif(operation_name == "ScalarArithmetic"):
-            op, datafact1, datafact2 = operation_others
-            if(is_datafacts):
-                """
-                Aggregation,Rankのdatafactsの対応 → Ordinal Attributeの順に並び替え → 上に1つ分シフトした列を生成 → AttributeArithmetic
-                """
-                if(ordinal_d is None):
-                    raise ValueError("ordinal_dが必要なのに引数に指定されていません！")
-                operationflow_l.append(datafact1.tranlate_operation(ordinal_d))
-                num = len(operationflow_l)-1
-                operationflow_l.append(Sort_ordinal_d([f'operationflow_l[{num}]',key_attr, ordinal_d]))
-                operationflow_l.append(Shift([f'operationflow_l[{num+1}]',1]))
-                operationflow_l.append(AttributeArithmetic[op, f'operationflow_l[{num+1}]', f'operationflow_l[{num+2}]'])
-            else:
-                operationflow_l.append(datafact1.translate_operation())
-                operationflow_l.append(datafact2.translate_operation())
-                num = len(operationflow_l)-1
-                operationflow_l.append(ScalarArithmetic(op,f'operationflow_l[{num-1}]',f'operationflow_l[{num}]'))
-            return operationflow_l
-    
-        elif(operation_name == "Rank"):
-            order, datafacts = operation_others
-            operationflow_l.append(datafacts.translate_operation(ordinal_d))
-            operationflow_l.append(Sort([f'operationflow_l[{len(operationflow_l)-1}]', order]))
-            if(not is_datafacts):
-                operationflow_l.append(ValueSelection([[col_name, filter_values[0]], "順位"]))
-            return operationflow_l
-        else:
-            raise ValueError("登録されていないOperation名です！")

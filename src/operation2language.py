@@ -192,11 +192,11 @@ subjectからItemFiltering用のリクエスト（問い合わせ）を生成す
 """
 def generate_IF_request(subject):
     parents, col_name, filter_values = subject
-    requests_l = [["in", ["Attribute",k], [v]] for k, v in parents.items() if(v!="*")]
+    requests_l = [["in", ["Attribute",k], [v]] for k, v in parents.items() if(v not in ["*","n","n-1"])]
     request = [] if(len(requests_l)==0) else requests_l[0] 
     for next_request in requests_l[1:]:
         request = ["and", request, next_request] if(request!=[]) else next_request
-    if(filter_values!=["*"]):
+    if(filter_values not in [["*"],["n"],["n-1"]]):
         final_request = ["in",["Attribute",col_name],filter_values]
         request = ["and", request, final_request] if(request!=[]) else final_request
     return request

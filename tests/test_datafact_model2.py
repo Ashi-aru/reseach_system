@@ -10,6 +10,7 @@ sys.path.append('/Users/ashikawaharuki/Desktop/research/TDB/test/system/src')
 # 自分で作成したクラス、関数をimport
 from datafact_model import Datafact
 from datafact_manager import DatafactManager
+import datafact_data
 
 
 PROJ_DIR = Path(__file__).resolve().parent.parent
@@ -147,9 +148,73 @@ class TestDatafact:
             result_d2
         ),
     ],
-    ids = ["case1","case2","case3", "case4"]
+    ids = [f'case{i}' for i in range(1,5)]
     )
     def test_handle_datafacts(self, datafact, manager, df, ordinal_d, expected_result):
         datafact.handle_datafacts(manager, ordinal_d, df)
         result = manager.search_result(datafact.subject,datafact.operation)
         assert  result== expected_result
+    
+    @pytest.mark.parametrize("datafact, ordinal_d", [
+        # Aggregation
+        (
+            datafact_data.convert_datafact_1,
+            ordinal_d,
+        ),
+        (
+            datafact_data.convert_datafacts_1_1,
+            ordinal_d,
+        ),
+        (
+            datafact_data.convert_datafacts_1_2,
+            ordinal_d,
+        ),
+        (
+            datafact_data.convert_datafact_2,
+            ordinal_d,
+        ),
+        (
+            datafact_data.convert_datafacts_2_1,
+            ordinal_d,
+        ),
+        (
+            datafact_data.convert_datafacts_2_2,
+            ordinal_d,
+        ),
+        (
+            datafact_data.convert_datafact_3,
+            ordinal_d,
+        ),
+        (
+            datafact_data.convert_datafacts_3_1,
+            ordinal_d,
+        ),
+        (
+            datafact_data.convert_datafacts_3_2,
+            ordinal_d,
+        ),
+        (
+            datafact_data.convert_datafact_4,
+            ordinal_d,
+        ),
+        (
+            datafact_data.convert_datafacts_4_1,
+            ordinal_d,
+        ),
+        (
+            datafact_data.convert_datafacts_4_2,
+            ordinal_d,
+        ),
+        (
+            datafact_data.convert_datafact_5,
+            ordinal_d,
+        ),
+        (
+            datafact_data.convert_datafacts_5_1,
+            ordinal_d,
+        ),
+    ],
+    ids = [f'case{i}' for i in range(1,15)]
+    )
+    def test_convert_datafact_to_operationflow(self, datafact, ordinal_d):
+        result = datafact.convert_datafact_to_operationflow(ordinal_d)
