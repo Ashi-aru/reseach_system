@@ -57,10 +57,11 @@ def is_datafacts(subject):
     is_datafacts = (
             filter_values==["*"] or ("*" in parents.values())
             or
-            filter_values!=['n'] or ('n' in parents.values())
+            filter_values==['n'] or ('n' in parents.values())
             or
-            filter_values!=['n-1'] or ('n-1' in parents.values())
+            filter_values==['n-1'] or ('n-1' in parents.values())
         )
+    key_attr = None
     if(filter_values==["*"]): 
         key_attr = col_name
     else:
