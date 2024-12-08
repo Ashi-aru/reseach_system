@@ -16,7 +16,7 @@ TODAY = date.today().strftime("%Y-%m-%d")
 
 logging.basicConfig(
         level=logging.INFO,
-        filename=PROJ_DIR/f'log/datafact_manager/{TODAY}.log',
+        filename=PROJ_DIR/f'log/datafact_model/{TODAY}.log',
         format='%(asctime)s\n%(message)s'
     )
 
@@ -187,11 +187,13 @@ class Datafact:
             if(operation_name == "Aggregation"):
                 aggregation_col, f_name = operation_others
                 if(is_datafacts):
-                    flow_d[numbering(n,1)]=ItemFiltering(generate_IF_request(self.subject))
+                    flow_d[numbering(n,1)]="data1から"+ItemFiltering(generate_IF_request(self.subject))+"という条件に合致するものを抽出"
                     flow_d[numbering(n,2)]=GroupingOperation([f_name,[col_name],[aggregation_col]])
                 else:
-                    flow_d[numbering(n,1)]=ItemFiltering(generate_IF_request(self.subject))
-                    flow_d[numbering(n,2)]=Aggregation([aggregation_col, f_name])
+                    flow_d[numbering(n,1)]="data1から"+ItemFiltering(generate_IF_request(self.subject))+"という条件に合致するものを抽出"
+                    t = ",".join(filter_values)
+                    text = f"{col_name}属性全体に占める「{t}」の" if(f_name in ["sum_percent","count_percent"]) else ""
+                    flow_d[numbering(n,2)]=text+Aggregation([aggregation_col, f_name])
                 return flow_d
 
             elif(operation_name == "ScalarArithmetic"):
@@ -205,11 +207,11 @@ class Datafact:
                     flow_d[numbering(n,1)]=datafact2flow_d(datafact1,ordinal_d,n=numbering(n,1))
                     flow_d[numbering(n,2)]=Sort_ordinal_d([numbering(n,1),key_attr, ordinal_d])
                     flow_d[numbering(n,3)]=Shift([numbering(n,2),1])
-                    flow_d[numbering(n,4)]=AttributeArithmetic([op, [numbering(n,2), numbering(n,3)]])
+                    flow_d[numbering(n,4)]=AttributeArithmetic([op, [numbering(n,2), numbering(n,3)]])+'を計算した属性を生成'
                 else:
                     flow_d[numbering(n,1)]=datafact2flow_d(datafact1,n=numbering(n,1))
                     flow_d[numbering(n,2)]=datafact2flow_d(datafact2,n=numbering(n,2))
-                    flow_d[numbering(n,3)]=ScalarArithmetic([op,numbering(n,1),numbering(n,2)])
+                    flow_d[numbering(n,3)]=ScalarArithmetic([op,numbering(n,1),numbering(n,2)])+"を計算"
                 return flow_d
         
             elif(operation_name == "Rank"):
@@ -224,4 +226,3 @@ class Datafact:
         flow_d = datafact2flow_d()
         logging.info(json.dumps(flow_d,ensure_ascii=False,indent=4))
         return flow_d
-

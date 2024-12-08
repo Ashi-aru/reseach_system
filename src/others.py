@@ -29,7 +29,7 @@ def to_dict_recursive(chat_completion_object):
             "completion_tokens": chat_completion_object.usage.completion_tokens,
             "total_tokens": chat_completion_object.usage.total_tokens,
             "completion_tokens_details": {
-                "reasoning_tokens": chat_completion_object.usage.completion_tokens_details['reasoning_tokens']
+                "reasoning_tokens": chat_completion_object.usage.completion_tokens_details.reasoning_tokens,
             }
         },
         "time": TODAY

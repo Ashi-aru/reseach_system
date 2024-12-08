@@ -8,7 +8,7 @@ def Aggregation(request):
     d_func = {'sum':'合計値','sum_percent':'合計値の割合','mean':'平均値','max':'最大値','min':'最小値','median':'中央値','count':'データ数','count_percent':'データ数の割合','nunique':'ユニークな値の数','unique':'ユニークな値'}
     # d_func = {'mean':'平均値','count':'データ数','sum':'合計値','min':'最小値','max':'最大値','median':'中央値','nunique':'ユニークな値の数','unique':'ユニークな値'}
     T = d_func[func] if(attribute=="") else f'{attribute}の{d_func[func]}'
-    return T
+    return T+"を計算"
 
 # 問い合わせ形式：['演算子', [Attributes名のリスト]]
 # 入力例：['+', ['A1',['*', ['A2','A3']]]]
@@ -60,8 +60,8 @@ def GroupingOperation(request):
     # d_func_QA = {'mean':'平均値','count':'データ数','sum':'合計値','min':'最小値','max':'最大値','median':'中央値'}
     T1 = '属性"'+','.join(groups)+'"の値によって分けられるグループ毎に'
     t2 = f'{attributes[0]}の{d_func_QA[func]}' if(attributes[0]!="") else f'{d_func_QA[func]}'
-    T2 = f'{t2}を集計した属性' if(len(attributes)==1) else f'{t2}とその値をとる{attributes[1]}を集計したdf'
-    return f'「{T1}、{T2}」'
+    T2 = f'{t2}を集計したdf' if(len(attributes)==1) else f'{t2}とその値をとる{attributes[1]}を集計したdf'
+    return f'「{T1}、{T2}」を作成'
 
 # 問い合わせ形式：[set1, set2]
 def Intersection(request):
@@ -141,19 +141,19 @@ def ScalarArithmetic(request):
     operator, v1, v2 = request
     operator_d = {'+':'和', '-':'差', '*':'積', '/':'商'}
     if(v1=='' and v2==''):
-        return f'両者の{operator_d[operator]}'
+        return f'「両者の{operator_d[operator]}」'
     elif(v1==''):
-        return f'前者と{v2}の{operator_d[operator]}'
+        return f'「前者と{v2}の{operator_d[operator]}」'
     elif(v2==''):
-        return f'{v1}と後者の{operator_d[operator]}'
+        return f'「{v1}と後者の{operator_d[operator]}」'
     else:
-        return f'{request[1]}と{request[2]}の{operator_d[operator]}'
+        return f'「{request[1]}と{request[2]}の{operator_d[operator]}」'
 
 # 問い合わせ形式:[対象データ（Attribute）, シフトする差分（+1だと下にずらす）]
 def Shift(request):
     target_data, shift_diff = request
     vector = "下" if(shift_diff>0) else "上"
-    return f'{target_data}を{vector}に{shift_diff}ずらした列を生成'
+    return f'「{target_data}を{vector}に{shift_diff}ずらした」属性を生成'
 
 # 問い合わせ形式：[`"attribute名"`, `昇順 or 降順`]
 # 入力例：["売上", 昇順]
@@ -161,7 +161,7 @@ def Shift(request):
 def Sort(request):
     attribute, order = request
     # d = {0:"昇順", 1:"降順"}
-    return f'「{attribute}を{order}でソートしたdfを生成」'
+    return f'「{attribute}を{order}でソート」したdfを生成'
 
 # 問い合わせ形式：[`"対象データ名"`, `"O_attribute名"`, `ordinal_d`]
 # 入力例：["売上", "年", {"年":[2021,2022,2023,2024]}]
@@ -181,7 +181,7 @@ def Union(request):
 def ValueSelection(request):
     index_name, index_value = request[0]
     value_attribute = request[1]
-    return f"「{index_name}=={index_value}であるという条件で{value_attribute}値を抽出」"
+    return f"「{index_name}=={index_value}であるという条件で{value_attribute}値」を抽出"
 
 
 # ----------------------------------------------------
