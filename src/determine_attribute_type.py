@@ -16,7 +16,7 @@ TODAY = date.today().strftime("%Y-%m-%d")
 
 logging.basicConfig(
         level=logging.DEBUG,
-        filename=PROJ_DIR/f'log/{TODAY}.log',
+        filename=PROJ_DIR/f'log/determine_attribute_type/{TODAY}.log',
         format='%(asctime)s\n%(message)s'
     )
 

@@ -1,6 +1,20 @@
 import pandas as pd
+from pathlib import Path
+import logging
+from datetime import date
 # 自分で作成した関数のインポート
 from others import filter_df_by_parents
+
+
+PROJ_DIR = Path(__file__).resolve().parent.parent
+DATA_DIR = PROJ_DIR/"data"
+TODAY = date.today().strftime("%Y-%m-%d")
+
+logging.basicConfig(
+        level=logging.DEBUG,
+        filename=PROJ_DIR/f'log/make_subject/{TODAY}.log',
+        format='%(asctime)s\n%(message)s'
+    )
 
 """
 parentsとドリルダウンの属性名を受け取り、datafactのsubjectを生成

@@ -1,4 +1,18 @@
 # データ操作→言語化
+from pathlib import Path
+import logging
+from datetime import date
+
+
+PROJ_DIR = Path(__file__).resolve().parent.parent
+DATA_DIR = PROJ_DIR/"data"
+TODAY = date.today().strftime("%Y-%m-%d")
+
+logging.basicConfig(
+        level=logging.DEBUG,
+        filename=PROJ_DIR/f'log/operation2language/{TODAY}.log',
+        format='%(asctime)s\n%(message)s'
+    )
 
 # 問い合わせ形式：['Attribute名', '関数名']
 # 入力例：['売上', 'sum']
