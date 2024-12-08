@@ -94,7 +94,7 @@ class DatafactManager:
     def update_sentences(self, subject, operation, sentence, makekey_flg=True):
         self.update_data(subject, operation, sentence, "sentences", makekey_flg)
         return None
-    
+
     """
     datafacts,results,significancesに格納されているデータを検索し返す関数。
     入力:(subject, operation, selected_d_name)
@@ -108,13 +108,13 @@ class DatafactManager:
             return selected_d[subject_key][operation_key]
         else:
             return None
-        
+
     def search_result(self, subject, operation):
         return self.search_value(subject, operation, "results")
-    
+
     def search_significance(self, subject, operation):
         return self.search_value(subject, operation, "significances")
-    
+
     def search_template(self, subject, operation):
         return self.search_value(subject, operation, "templates")
     

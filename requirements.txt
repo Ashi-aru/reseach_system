@@ -7,3 +7,4 @@ django
 openai
 pypdf
 pytest
+python-dotenv
