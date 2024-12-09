@@ -52,3 +52,26 @@ datafact2 = Datafact(
         )
     ]
 )
+
+datafact3 = Datafact(
+    subject=[{"大分類":"サービス業"}, "年", ["2023"]],
+    operation=[
+        "Rank",
+        "降順",
+        Datafact(
+            subject=[{"大分類":"サービス業"}, "年", ["*"]],
+            operation=[
+                "ScalarArithmetic", 
+                "-",
+                Datafact(
+                    subject=[{"大分類":"サービス業"},"年",["n"]],
+                    operation=["Aggregation", "Purchase Price Per Unit", "sum"]
+                ),
+                Datafact(
+                    subject=[{"大分類":"サービス業"},"年",["n-1"]],
+                    operation=["Aggregation", "Purchase Price Per Unit", "sum"]
+                )
+            ]
+        )
+    ]
+)
