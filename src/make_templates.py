@@ -26,7 +26,7 @@ load_dotenv()
 API_KEY = os.getenv("OPENAI_API_KEY")
 with open(DATA_DIR/"prompt/make_templates.txt", "r") as f:  
         BASE_PROMPT = f.read()
-MODEL = "gpt-4o-2024-05-13"
+MODEL = "o1-mini" # "o1-mini" # "gpt-4o-2024-08-06"
 
 
 
@@ -63,7 +63,7 @@ def make_templates(datafact_l, manager, ordinal_d, table_description):
         client = OpenAI(api_key=API_KEY)
         prompt = make_prompt(base_prompt,datafact_num=end-start,dn_flg=True)
         messages = [
-                {"role": "system", "content": prompt},
+                {"role": "user", "content": prompt},
                 {"role": "user", "content": "Input:\n"+json.dumps(flows_d,ensure_ascii=False,indent=4)+"\n\nOutput:\n"},
                 ]
         response = client.chat.completions.create(model=MODEL, messages=messages)
