@@ -8,3 +8,4 @@ openai
 pypdf
 pytest
 python-dotenv
+scipy
