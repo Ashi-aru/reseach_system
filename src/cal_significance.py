@@ -3,7 +3,9 @@ from pathlib import Path
 import math
 from datetime import date
 from scipy.stats import t
+import scipy.stats as stats
 import numpy as np
+import random
 # 自分が定義したクラス、関数をインポート
 
 
@@ -65,3 +67,31 @@ def detect_outliers(data, alpha=0.05):
         else:
             break  
     return result_d
+
+
+if(__name__=="__main__"):
+    def smirnov_grubbs(data, alpha):
+        x, o = list(data), []
+        while True:
+            n = len(x)
+            t = stats.t.isf(q=(alpha / n) / 2, df=n - 2)
+            tau = (n - 1) * t / np.sqrt(n * (n - 2) + n * t * t)
+            i_min, i_max = np.argmin(x), np.argmax(x)
+            myu, std = np.mean(x), np.std(x, ddof=1)
+            i_far = i_max if np.abs(x[i_max] - myu) > np.abs(x[i_min] - myu) else i_min
+            tau_far = np.abs((x[i_far] - myu) / std)
+            if tau_far < tau: break
+            o.append(x.pop(i_far))
+        return o #(np.array(x), np.array(o))
+
+
+    # データの基本設定
+    normal_data = [random.uniform(0, 500) for _ in range(1000)]  # 正常値の範囲 10~20
+    outliers = [random.uniform(800, 1000), random.uniform(-10, 0)]  # 外れ値
+    # 正常値と外れ値を混ぜる
+    data = normal_data + outliers
+    random.shuffle(data) 
+    alpha = 0.05
+    # 実行
+    print(smirnov_grubbs(data, alpha))
+    print(detect_outliers(data, alpha))

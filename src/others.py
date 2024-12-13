@@ -12,9 +12,12 @@ logging.basicConfig(
         filename=PROJ_DIR/f'log/others/{TODAY}.log',
         format='%(asctime)s\n%(message)s'
     )
-
-# responseはChatCompletionオブジェクトで、これをリストに格納してしまうと、jsonとして保存ができないので、
-# ChatCompletionオブジェクトを再帰的に計算し、ネストした辞書に変換する関数を定義
+"""
+ChatCompletionオブジェクト → 辞書の変換を行う関数
+ChatCompletionオブジェクト:
+- OpenAI API responseのデータ型
+- json.dumpsができないので辞書に変換してから保存する必要あり
+"""
 def to_dict_recursive(chat_completion_object):
     d = {
         "id": chat_completion_object.id,
@@ -45,10 +48,11 @@ def to_dict_recursive(chat_completion_object):
     }
     return d
 
-
-# parents(Item Filteringする条件)とdfが与えられたとき、parentsに沿って抽出したdfを出力
-# 入力: (parents, df)→({"県":"東京都", "年":2022}, df)
-# 出力: new_df
+"""
+parents(Item Filteringする条件)とdfが与えられたとき、parentsに沿って抽出したdfを出力
+入力: (parents, df)→({"県":"東京都", "年":2022}, df)
+出力: new_df
+"""
 def filter_df_by_parents(parents, df):
     if(len(parents)==0):
         return df

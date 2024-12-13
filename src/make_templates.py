@@ -29,10 +29,9 @@ with open(DATA_DIR/"prompt/make_templates.txt", "r") as f:
 MODEL = "o1-mini" # "o1-mini" # "gpt-4o-2024-08-06"
 
 
-
 """
 プロンプトを作成する関数
-td_flgは表データの説明文についての置き換えを実施するかどうか
+td_flgは表データの説明文(table_description)についての置き換えを実施するかどうか
 dn_flgはdatafact_numの置き換えを実施するかどうか
 入力:(表データの説明文, datafactの数, td_flg, dn_flg) = (str, end-start)
 出力:プロンプト(string)

@@ -29,9 +29,7 @@ class Datafact:
     def __init__(self, subject, operation, ):
         self.subject = subject
         self.operation = operation
-
     
-    # operationを実行し、結果をresultインスタンスに保存
     """
     ドリルダウンの木構造における、ノードの計算を実施する関数
     入力:
@@ -170,9 +168,9 @@ class Datafact:
             raise ValueError("登録されていないOperation名です！")
 
     """
-    データファクトを受け取り、データ操作の言語化を行い、保存・出力を行う関数
+    データファクトを受け取り、データ操作の言語化を行う関数
     入力: datafact(self)
-    出力: データ操作フローを言語化したもの(辞書)
+    出力: データ操作フローを言語化した辞書。/data/samples/operationflow.json参照
     """
     # NOTE: Rank,ScalarArithmeticの時は、ordinal_dは常に引数に入れるのが無難かも
     def convert_datafact_to_operationflow(self, ordinal_d=None):

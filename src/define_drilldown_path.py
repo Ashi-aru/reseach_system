@@ -35,8 +35,10 @@ def make_sample_data(sample_df, attribute_type):
         }
     return sample_data
 
-# ドリルダウンの案を列挙する
+
 """
+ドリルダウンの案を列挙を実施。
+
 【入力例】
 "sample_data"は上のmake_sample_dataで生成する
 {
