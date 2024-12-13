@@ -31,6 +31,6 @@ subject := [parents(親ノードの情報), ノードの属性名, ノードの�
 """
 def make_subject(parents, drilldown_attribute, df, flg=True):
     if(flg):
-        df = filter_df_by_parents(panrents=parents,df=df)
+        df = filter_df_by_parents(parents=parents,df=df)
     return [[parents, drilldown_attribute, value] for value in df[drilldown_attribute].unique()]
 
