@@ -27,7 +27,7 @@ def make_metadata(df):
     return_d = dict([(column_name, list(df[column_name])) for column_name in df.columns])
     return json.dumps(return_d)
 
-# 表データに関するメタデータから各属性のタイプ（Categorical, Ordinal, Quantitative）を推論する
+# 表データに関するメタデータから各属性のタイプ（Categorical, Ordinal, Ordinal_t, Quantitative）を推論する
 def reasoning_about_attribute_type(metadata):
     API_KEY = os.getenv('OPENAI_API_KEY')
     MODEL = "gpt-4o-2024-08-06" # gpt-4o-mini, gpt-4o-2024-05-13, gpt-4o-2024-08-06

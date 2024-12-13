@@ -103,7 +103,7 @@ def list_drilldown_ideas(input_data):
 def count_unique_data(main_df, attribute_type):
     unique_num_d = {}
     for att_name, att_type in attribute_type.items():
-        if(att_type == "Ordinal" or att_type == "Categorical"):
+        if(att_type in ["Ordinal","Ordinal_t","Categorical"]):
             unique_num_d[att_name] = main_df[att_name].nunique(dropna=False)
     return unique_num_d
 

@@ -86,12 +86,12 @@ if(__name__=="__main__"):
 
 
     # データの基本設定
-    normal_data = [random.uniform(0, 500) for _ in range(1000)]  # 正常値の範囲 10~20
+    normal_data = [random.uniform(0, 500) for _ in range(1000)]  # 正常値
     outliers = [random.uniform(800, 1000), random.uniform(-10, 0)]  # 外れ値
     # 正常値と外れ値を混ぜる
     data = normal_data + outliers
     random.shuffle(data) 
-    alpha = 0.05
     # 実行
+    alpha = 0.05
     print(smirnov_grubbs(data, alpha))
     print(detect_outliers(data, alpha))
