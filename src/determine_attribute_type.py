@@ -15,6 +15,7 @@ PROMPT_DIR = DATA_DIR/"prompt"
 TODAY = date.today().strftime("%Y-%m-%d")
 
 logger = setup_logger()
+logger_tmp = setup_logger(root_flg=False)
 
 
 # df(もしくはサンプルデータのdf)を受け取り、メタデータを生成する
@@ -38,8 +39,9 @@ def reasoning_about_attribute_type(metadata):
     response = client.chat.completions.create(model=MODEL, messages=messages)
     content = response.choices[0].message.content
     response = to_dict_recursive(response)
-    logger.info(content)
-    return [content, response]
+    # logger_tmp.info(json.dumps(response,ensure_ascii=False,indent=4))
+    # logger.info(content)
+    return json.loads(content)
 
 
 def determine_attribute_type(sample_df):
