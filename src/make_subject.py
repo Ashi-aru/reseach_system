@@ -13,20 +13,14 @@ TODAY = date.today().strftime("%Y-%m-%d")
 looger = setup_logger()
 
 """
-parentsとドリルダウンの属性名を受け取り、datafactのsubjectを生成
-入力:(parents, drilldown_attribute, df, flg)=({"県":"東京都", "年":2022}, "大分類", df)
-出力:[
-    [{"県":"東京都", "年":2022}, "大分類", "製造業"],
-    [{"県":"東京都", "年":2022}, "大分類", "サービス業"],
-    [{"県":"東京都", "年":2022}, "大分類", "漁業"],
-    ...
-    ]
-補足情報:
-datafact := subject, operation
-subject := [parents(親ノードの情報), ノードの属性名, ノードの属性値]
+ノードへのパスを受け取り、ノードのsubjectを出力する関数
+入力:
+- ノードへのパス: ["製造業","静岡県",2022]、["製造業"]、["製造業","*","2022"]
+- drilldown_attr: ["大分類","都道府県","年"]
+出力:
+- subject: [{"大分類":"製造業", "都道府県":"静岡県"}, "年", ["2022"]]、[{}, "大分類", ["製造業"]]、[{"大分類":"製造業", "都道府県":"*"}, "年", ["2022"]]
 """
-def make_subject(parents, drilldown_attribute, df, flg=True):
-    if(flg):
-        df = filter_df_by_parents(parents=parents,df=df)
-    return [[parents, drilldown_attribute, value] for value in df[drilldown_attribute].unique()]
-
+def make_subject(node_path, drilldown_attr):
+    parents,filter_value = node_path[:-1], node_path[-1]
+    parents = dict([(drilldown_attr[i], x) for i, x in enumerate(parents)])
+    return [parents, drilldown_attr[len(node_path)-1], [filter_value]]
