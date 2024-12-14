@@ -46,9 +46,8 @@ def reasoning_about_attribute_type(metadata):
     return [content, response]
 
 
-def determine_attribute_type(data_path):
-    df = pd.read_csv(data_path)
-    metadata = make_metadata(df)
+def determine_attribute_type(sample_df):
+    metadata = make_metadata(sample_df)
     label_result = reasoning_about_attribute_type(metadata)
     return label_result
 
