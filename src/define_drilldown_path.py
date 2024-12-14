@@ -1,12 +1,12 @@
 from pathlib import Path
 import os
 from openai import OpenAI
-import logging
 from datetime import date
 import pandas as pd
 import json
 # 自分で作った関数の読み込み
 from others import to_dict_recursive
+from logging_config import setup_logger
 
 PROJ_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = PROJ_DIR/"data"
@@ -14,11 +14,9 @@ PROMPT_DIR = DATA_DIR/"prompt"
 
 TODAY = date.today().strftime("%Y-%m-%d")
 
-logging.basicConfig(
-        level=logging.DEBUG,
-        filename=PROJ_DIR/f'log/define_drilldown_path/{TODAY}.log',
-        format='%(asctime)s\n%(message)s'
-    )
+
+# ロガーの設定
+logger = setup_logger()
 
 
 # ----------------------------------------------------------------
@@ -90,8 +88,8 @@ def list_drilldown_ideas(input_data):
     response = client.chat.completions.create(model=MODEL, messages=messages)
     content = response.choices[0].message.content
     response = to_dict_recursive(response)
-    # logging.info(content)
-    logging.info(json.dumps(response,ensure_ascii=False,indent=4))
+    # logger.info(content)
+    logger.info(json.dumps(response,ensure_ascii=False,indent=4))
     return [content, response]
 
 
@@ -115,7 +113,7 @@ def check_drilldown_ideas(drilldown_ideas, main_df, attribute_type):
         for column_name in drilldown["drilldown"]:
             node_n *= unique_num_d[column_name]
         drilldown_ideas[idea_n]["flg"] = (node_n<10**6)
-    logging.info(json.dumps(drilldown_ideas,ensure_ascii=False,indent=4))
+    logger.info(json.dumps(drilldown_ideas,ensure_ascii=False,indent=4))
     return drilldown_ideas
 
 
@@ -153,7 +151,9 @@ def define_drilldown_path(main_df, sample_df, description, analysis_goal, attrib
     # ②
     drilldown_ideas = json.loads(output[0])
     drilldown_ideas = check_drilldown_ideas(drilldown_ideas=drilldown_ideas, main_df=main_df, attribute_type=attribute_type)
-    return drilldown_ideas
+    print(json.dumps(drilldown_ideas,ensure_ascii=False,indent=4))
+    selected_drilldown = input("ドリルダウン名を入力してください:")
+    return drilldown_ideas[selected_drilldown]["drilldown"]
 
 
 if __name__ == "__main__":
@@ -173,3 +173,4 @@ if __name__ == "__main__":
     }
 
     ideas = define_drilldown_path(main_df=main_df,sample_df=sample_df,description=description,analysis_goal=analysis_goal,attribute_type=attribute_type)
+    print(ideas)
