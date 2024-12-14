@@ -4,23 +4,19 @@ from openai import OpenAI
 from datetime import date
 import json
 from pathlib import Path
-import logging
 import re
 # 自分で定義した関数、クラスのインポート
 from datafact_manager import DatafactManager
 from datafact_model import Datafact
 from others import to_dict_recursive
+from logging_config import setup_logger
 
 
 PROJ_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = PROJ_DIR/'data'
 TODAY = date.today().strftime("%Y-%m-%d")
 
-logging.basicConfig(
-    level=logging.INFO,
-    filename=PROJ_DIR/f'log/make_templates/{TODAY}.log',
-    format='%(asctime)s\n%(message)s'
-)
+logger = setup_logger()
 
 load_dotenv()
 API_KEY = os.getenv("OPENAI_API_KEY")
@@ -57,7 +53,7 @@ def make_templates(datafact_l, manager, ordinal_d, table_description):
         end = start+step_n if(start+step_n<=len(datafact_l)) else len(datafact_l)
         for i, datafact in enumerate(datafact_l[start:end]):
             flows_d[f"flow_{start+i}"] = datafact.convert_datafact_to_operationflow(ordinal_d)
-        # logging.info(json.dumps(flows_d,ensure_ascii=False,indent=4))
+        # logger.info(json.dumps(flows_d,ensure_ascii=False,indent=4))
 
         client = OpenAI(api_key=API_KEY)
         prompt = make_prompt(base_prompt,datafact_num=end-start,dn_flg=True)
@@ -68,10 +64,10 @@ def make_templates(datafact_l, manager, ordinal_d, table_description):
         response = client.chat.completions.create(model=MODEL, messages=messages)
         content = json.loads(response.choices[0].message.content)
         response = to_dict_recursive(response)
-        logging.info(json.dumps(content,ensure_ascii=False,indent=4))
+        logger.info(json.dumps(content,ensure_ascii=False,indent=4))
 
         for i,(k,v) in enumerate(content.items()):
-            # logging.info(f"=====================\n{k}\n{v}")
+            # logger.info(f"=====================\n{k}\n{v}")
             datafact, template = datafact_l[start+i], v["template"]
             manager.update_templates(datafact.subject, datafact.operation, template)
         start = end

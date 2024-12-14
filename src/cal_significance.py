@@ -1,4 +1,3 @@
-import logging
 from pathlib import Path
 import math
 from datetime import date
@@ -7,16 +6,13 @@ import scipy.stats as stats
 import numpy as np
 import random
 # 自分が定義したクラス、関数をインポート
+from logging_config import setup_logger
 
 
 PROJ_DIR = Path(__file__).resolve().parent.parent
 TODAY = date.today().strftime("%Y-%m-%d")
+logger = setup_logger()
 
-logging.basicConfig(
-        level=logging.INFO,
-        filename=PROJ_DIR/f'log/cal_significance/{TODAY}.log',
-        format='%(asctime)s\n%(message)s'
-    )
 
 """
 Grubbs検定で外れ値を検出し、そのp値を計算する関数。

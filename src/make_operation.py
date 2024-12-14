@@ -1,17 +1,14 @@
 from pathlib import Path
-import logging
 from datetime import date
+# 自分で定義した関数・クラスをimport
+from logging_config import setup_logger
 
 
 PROJ_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = PROJ_DIR/"data"
 TODAY = date.today().strftime("%Y-%m-%d")
 
-logging.basicConfig(
-        level=logging.DEBUG,
-        filename=PROJ_DIR/f'log/make_operation/{TODAY}.log',
-        format='%(asctime)s\n%(message)s'
-    )
+logger = setup_logger()
 
 FUNC_D = {
     1:"合計値を計算(sum)",

@@ -1,5 +1,4 @@
 import operator
-import logging
 from pathlib import Path
 from datetime import date
 import json
@@ -9,16 +8,12 @@ import copy
 from datafact_manager import DatafactManager
 from operation2language import Aggregation, AttributeArithmetic, AttributeScalarArithmetic, AttributeSelection, Difference, GroupingOperation, ItemFiltering, ScalarArithmetic, Shift, Sort ,Sort_ordinal_d, ValueSelection, generate_IF_request
 from others import is_datafacts as Is_datafacts
-
+from logging_config import setup_logger
 
 PROJ_DIR = Path(__file__).resolve().parent.parent
 TODAY = date.today().strftime("%Y-%m-%d")
 
-logging.basicConfig(
-        level=logging.INFO,
-        filename=PROJ_DIR/f'log/datafact_model/{TODAY}.log',
-        format='%(asctime)s\n%(message)s'
-    )
+logger = setup_logger()
 
 
 class Datafact:
@@ -62,7 +57,7 @@ class Datafact:
                 "unique": (lambda s_filtered,_:s_filtered.unique())
             }
             result = f[f_name](s_filtered, s)
-            # logging.info(result)
+            # logger.info(result)
             manager.update_results(self.subject,self.operation,result=result)
 
         elif(operation_name=="ScalarArithmetic"):
@@ -72,7 +67,7 @@ class Datafact:
             result2 = manager.search_result(datafact2.subject, datafact2.operation)
             operators = {"+": operator.add,"-": operator.sub,"*": operator.mul,"/": operator.truediv}
             result = operators[op](result1, result2)
-            # logging.info(result)
+            # logger.info(result)
             manager.update_results(self.subject,self.operation,result=result)
         # TODO: 同率順位の時の対応
         elif(operation_name=="Rank"):
@@ -82,7 +77,7 @@ class Datafact:
             subject2, operation2 = datafacts.subject, datafacts.operation
             ranks_d = manager.search_result(subject2, self.operation)
             if(ranks_d is not None):
-                # logging.info(ranks_d[filter_values[0]])
+                # logger.info(ranks_d[filter_values[0]])
                 manager.update_results(self.subject,self.operation,result=ranks_d[filter_values[0]])
             else:
                 results_d = manager.search_result(subject2,operation2)
@@ -94,7 +89,7 @@ class Datafact:
                     # 次に備えて、ranks_dは保存しておく
                     manager.update_results(subject2, self.operation,result=ranks_d)
                     manager.update_results(self.subject,self.operation,result=ranks_d[filter_values[0]])
-                    # logging.info(ranks_d[filter_values[0]])
+                    # logger.info(ranks_d[filter_values[0]])
                 else:
                     raise ValueError("Rankをつける値の計算をまだしてないんじゃないか！！")
         else:
@@ -222,5 +217,5 @@ class Datafact:
             else:
                 raise ValueError("登録されていないOperation名です！")
         flow_d = datafact2flow_d()
-        logging.info(json.dumps(flow_d,ensure_ascii=False,indent=4))
+        logger.info(json.dumps(flow_d,ensure_ascii=False,indent=4))
         return flow_d

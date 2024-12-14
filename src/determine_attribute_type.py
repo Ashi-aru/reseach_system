@@ -1,12 +1,12 @@
 from pathlib import Path
 import os
 from openai import OpenAI
-import logging
 from datetime import date
 import pandas as pd
 import json
 # 自分で作った関数の読み込み
 from others import to_dict_recursive
+from logging_config import setup_logger
 
 
 PROJ_DIR = Path(__file__).resolve().parent.parent
@@ -14,11 +14,7 @@ DATA_DIR = PROJ_DIR/"data"
 PROMPT_DIR = DATA_DIR/"prompt"
 TODAY = date.today().strftime("%Y-%m-%d")
 
-logging.basicConfig(
-        level=logging.DEBUG,
-        filename=PROJ_DIR/f'log/determine_attribute_type/{TODAY}.log',
-        format='%(asctime)s\n%(message)s'
-    )
+logger = setup_logger()
 
 
 # df(もしくはサンプルデータのdf)を受け取り、メタデータを生成する
@@ -42,7 +38,7 @@ def reasoning_about_attribute_type(metadata):
     response = client.chat.completions.create(model=MODEL, messages=messages)
     content = response.choices[0].message.content
     response = to_dict_recursive(response)
-    logging.info(content)
+    logger.info(content)
     return [content, response]
 
 

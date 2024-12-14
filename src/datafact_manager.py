@@ -1,17 +1,13 @@
 import pandas as pd
-import logging
 from pathlib import Path
 from datetime import date
-
+# 自分で定義した関数・クラスをimport
+from logging_config import setup_logger
 
 PROJ_DIR = Path(__file__).resolve().parent.parent
 TODAY = date.today().strftime("%Y-%m-%d")
 
-logging.basicConfig(
-        level=logging.INFO,
-        filename=PROJ_DIR/f'log/datafact_manager/{TODAY}.log',
-        format='%(asctime)s\n%(message)s'
-    )
+logger = setup_logger()
 
 
 class DatafactManager:
@@ -42,7 +38,7 @@ class DatafactManager:
         subject_key = (tuple([(k,v) for k,v in subject[0].items()]), subject[1], (subject[2][0],))
 
         operation_name, *operation_others = operation
-        # logging.info(operation_others)
+        # logger.info(operation_others)
 
         if(operation_name=="Aggregation"):
             culumn_name, f_name = operation_others
@@ -76,7 +72,7 @@ class DatafactManager:
             data_d[subject_key] = {operation_key:update_data}
         else:
             data_d[subject_key][operation_key] = update_data
-        # logging.info(self.significances[subject_key][operation_key])
+        # logger.info(self.significances[subject_key][operation_key])
         return None
 
     def update_results(self, subject, operation, result, makekey_flg=True):
