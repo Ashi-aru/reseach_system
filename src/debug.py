@@ -22,18 +22,20 @@ def unpack_datafact(datafact):
     part_l = []
     parents, column_name, filter_values = datafact.subject
     operation_name, *operation_others = datafact.operation
+    subject_str = f"[{parents},{column_name},{filter_values}]"
     if(operation_name=="Aggregation"):
-        part_l.append(f"Datafact(subject={datafact.subject},operation={datafact.operation}),")
+        aggregation_col, f_name = operation_others
+        part_l.append(f"Datafact(subject={subject_str},operation=[{aggregation_col},{f_name}]),")
         return part_l
     elif(operation_name=="ScalarArithmetic"):
         op, datafact1, datafact2 = operation_others
-        l = ["Datafact(", f"subject={datafact.subject},", "operation=[", "ScalarArithmetic,", f"{op},"]+unpack_datafact(datafact1)+unpack_datafact(datafact2)+["]", ")"]
+        l = ["Datafact(", f"subject={subject_str},", "operation=[", "ScalarArithmetic,", f"{op},"]+unpack_datafact(datafact1)+unpack_datafact(datafact2)+["]", ")"]
         for part in l:
             part_l.append(part)
         return part_l
     elif(operation_name=="Rank"):
         order, datafacts = operation_others
-        l = ["Datafact(", f"subject={datafact.subject},", "operation=[", "Rank,", f"{order},"]+unpack_datafact(datafacts)+["]", ")"]
+        l = ["Datafact(", f"subject={subject_str},", "operation=[", "Rank,", f"{order},"]+unpack_datafact(datafacts)+["]", ")"]
         for part in l:
             part_l.append(part)
         return part_l
@@ -51,7 +53,8 @@ def unpack_operation(operation):
         part_l = []
         operation_name, *operation_others = operation
         if(operation_name=="Aggregation"):
-            part_l.append(f",operation={operation}),")
+            aggregation_col, f_name = operation_others
+            part_l.append(f",operation=[{operation_name},{aggregation_col},{f_name}],")
             return part_l
         elif(operation_name=="ScalarArithmetic"):
             op, datafact1, datafact2 = operation_others
@@ -83,7 +86,7 @@ def debug_datafact(datafact):
     for part in part_l:
         if(part in [")", "]"]):
             tab_n -= 1
-        all_str += ("\t"*tab_n + part + "\n")
+        all_str += ("    "*tab_n + part + "\n")
         if(part in ["Datafact(","operation=["]):
             tab_n += 1
     return all_str
@@ -103,7 +106,7 @@ def debug_operation(operation):
     for part in part_l:
         if(part in [")", "]"]):
             tab_n -= 1
-        all_str += ("\t"*tab_n + part + "\n")
+        all_str += ("    "*tab_n + part + "\n")
         if(part in ["Datafact(","operation=["]):
             tab_n += 1
     return all_str
