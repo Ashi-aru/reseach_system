@@ -1,7 +1,9 @@
 from pathlib import Path
 from datetime import date
 # 自分で定義した関数・クラスをimport
+from datafact_model import Datafact
 from logging_config import setup_logger
+from debug import debug_datafact
 
 
 PROJ_DIR = Path(__file__).resolve().parent.parent
@@ -23,7 +25,19 @@ FUNC_D = {
     10:"ユニークな値の数をカウント(nunique)",
     11:"ユニークな値を列挙(unique)"
     }
-
+F_NUM2F_NAME_D = {
+    1:"sum",
+    2:"sum_percent",
+    3:"mean",
+    4:"mean_percent",
+    5:"max",
+    6:"min",
+    7:"meadian",
+    8:"count",
+    9:"count_percent",
+    10:"nunique",
+    11:"unique"
+    }
 OPERATOR_D = {
     1:"+",
     2:"-",
@@ -69,8 +83,95 @@ def define_scalar_arithmetic_operator(focus_att_l, focus_att2func_d, attr_type_d
     return_d = {}
     for focus_att in focus_att_l:
         for func_num in focus_att2func_d[focus_att]:
-            if(func_num<10 and attr_type_d[focus_att]=="Ordinal_t"): # 時系列データにのみSclarArithmeticを実施
+            if(func_num<11 and attr_type_d[focus_att]=="Ordinal_t"): # 時系列データにのみSclarArithmeticを実施
                 return_d[(focus_att,func_num)]=[2,4] # 数字の意味についてはOPERATOR_Dを参照
             else:
                 return_d[(focus_att,func_num)]=[None]
     return return_d
+
+
+"""
+subject、被Aggregation属性、Aggregation_f, Operatorを受け取り、datafact.operationのリストを出力する関数
+
+入力
+- agg_attrs: 被Aggregation属性のリスト。
+- agg_f_d: define_aggregation_Fの出力。
+- operator_d: define_scalar_arithmetic_operatorの出力
+- subject: datafact.subject。src/make_subject.pyで生成
+- ordinal_d: （時系列の）Ordinal属性について、順序を保存した辞書.({"年":["2019","2020",...,"2024"],..})
+- step_n: 1/2/3。
+    - 1: Aggregation、Aggregation→ScalarArithmeticを実行
+    - 2: Aggregation→Rank、Aggregation→ScalarArithmetic→Rankを実行
+    - 3: Aggregation→Rank→ScalarArithmeticを実行
+出力
+- operation_l: datafact.operationのリスト。
+"""
+# TODO: デバックの仕方を検討
+def make_operations(agg_attrs, agg_f_d, operator_d, subject, ordinal_d, step_n):
+    operation_l = []
+    parents, col_name, filter_value = subject
+
+    if(step_n==1):
+        for agg_attr in agg_attrs:
+            for f_num in agg_f_d[agg_attr]:
+                operation_agg = ["Aggregation", agg_attr, F_NUM2F_NAME_D[f_num]]
+                operation_l.append(operation_agg)
+                n = ordinal_d[col_name].index(filter_value[0])
+                # NOTE: ordinal_dは降順を想定しているが、昇順の方が良いのか、、？？
+                if(n==len(ordinal_d[col_name])-1): 
+                    break
+                subject1, subject2 = subject, [parents,col_name,[ordinal_d[col_name][n+1]]]
+                for op in operator_d[(agg_attr, f_num)]:
+                    if(op is None): continue
+                    operation_scalar = [
+                        "ScalarArithmetic", 
+                        OPERATOR_D[op], 
+                        Datafact(subject1, operation_agg),
+                        Datafact(subject2, operation_agg)
+                    ]
+                    operation_l.append(operation_scalar)
+    if(step_n==2):
+        for agg_attr in agg_attrs:
+            for f_num in agg_f_d[agg_attr]:
+                if(f_num>=11): continue
+                operation_agg = ["Aggregation", agg_attr, F_NUM2F_NAME_D[f_num]]
+                subject_ = [parents, col_name, ["*"]]
+                operation_agg_rank = ["Rank", "降順", Datafact(subject_, operation_agg)]
+                operation_l.append(operation_agg_rank)
+                subject1, subject2 = [parents, col_name, ["n"]], [parents, col_name, ["n-1"]]
+                for op in operator_d[(agg_attr, f_num)]:
+                    if(op is None): continue
+                    operation_scalar = [
+                        "ScalarArithmetic", 
+                        OPERATOR_D[op], 
+                        Datafact(subject1, operation_agg),
+                        Datafact(subject2, operation_agg)
+                    ]
+                    operation_scalar_rank = [
+                        "Rank",
+                        "降順",
+                        Datafact([parents, col_name, ["*"]], operation_scalar)
+                    ]
+                    operation_l.append(operation_scalar_rank)
+    if(step_n==3):
+        for agg_attr in agg_attrs:
+            for f_num in agg_f_d[agg_attr]:
+                if(f_num>=11): continue
+                operation_agg = ["Aggregation", agg_attr, F_NUM2F_NAME_D[f_num]]
+                operation_agg_rank = ["Rank", "降順", Datafact([parents, col_name, ["*"]], operation_agg)]
+                n = ordinal_d[col_name].index(filter_value[0])
+                # NOTE: ordinal_dは降順を想定しているが、昇順の方が良いのか、、？？
+                if(n==len(ordinal_d[col_name])-1): 
+                    break
+                subject1, subject2 = subject, [parents,col_name,[ordinal_d[col_name][n+1]]]
+                for op in operator_d[(agg_attr, f_num)]:
+                    if(op is None): continue
+                    operation_agg_rank_scalar = [
+                        "ScalarArithmetic", 
+                        OPERATOR_D[op], 
+                        Datafact(subject1, operation_agg_rank),
+                        Datafact(subject2, operation_agg_rank)
+                    ]
+                    operation_l.append(operation_agg_rank_scalar)
+    return operation_l
+    
