@@ -3,7 +3,6 @@ from datetime import date
 # 自分で定義した関数・クラスをimport
 from datafact_model import Datafact
 from logging_config import setup_logger
-from debug import debug_datafact
 
 
 PROJ_DIR = Path(__file__).resolve().parent.parent
@@ -110,6 +109,14 @@ subject、被Aggregation属性、Aggregation_f, Operatorを受け取り、datafa
 def make_operations(agg_attrs, agg_f_d, operator_d, subject, ordinal_d, step_n):
     operation_l = []
     parents, col_name, filter_value = subject
+
+    # NOTE: subject=="root"時の対応だけ別途用意、、。
+    if(subject == [{},"",[]]):
+        for agg_attr in agg_attrs:
+            for f_num in agg_f_d[agg_attr]:
+                operation_agg = ["Aggregation", agg_attr, F_NUM2F_NAME_D[f_num]]
+                operation_l.append(operation_agg)
+        return operation_l
 
     if(step_n==1):
         for agg_attr in agg_attrs:

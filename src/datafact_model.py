@@ -38,7 +38,10 @@ class Datafact:
         operation_name, *operation_others = self.operation
     
         if(operation_name=="Aggregation"):
-            if(df is not None):
+            # NOTE: subject=="root"の時の対応を別途用意
+            if(self.subject==[{},"",[]]):
+                df_filtered = df
+            else:
                 df_filtered = df[df[column_name].isin(filter_values)]
             # Operation:["Aggregation", カラム名, Aggregation_Func]
             aggregation_col, f_name = operation_others
