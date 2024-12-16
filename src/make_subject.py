@@ -21,7 +21,7 @@ looger = setup_logger()
 - subject: [{"大分類":"製造業", "都道府県":"静岡県"}, "年", ["2022"]]、[{}, "大分類", ["製造業"]]、[{"大分類":"製造業", "都道府県":"*"}, "年", ["2022"]]
 """
 def make_subject(node_path, drilldown_attr):
-    if(node_path=="root"):
+    if(node_path==["_root"]):
         return [{},"",[]]
     parents,filter_value = node_path[:-1], node_path[-1]
     parents = dict([(drilldown_attr[i], x) for i, x in enumerate(parents)])

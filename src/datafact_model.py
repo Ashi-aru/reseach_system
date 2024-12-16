@@ -38,7 +38,7 @@ class Datafact:
         operation_name, *operation_others = self.operation
     
         if(operation_name=="Aggregation"):
-            # NOTE: subject=="root"の時の対応を別途用意
+            # NOTE: subject=="_root"の時の対応を別途用意
             if(self.subject==[{},"",[]]):
                 df_filtered = df
             else:
