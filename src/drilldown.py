@@ -1,44 +1,66 @@
-import pandas as pd
+import time
+from datetime import datetime
+import copy
 # 自分で作った関数の読み込み
-from others import filter_df_by_parents
+from others import filter_df_by_parents, filter_df_by_subject
+from logging_config import setup_logger
+from make_operation import make_operations
+from make_subject import make_subject
+from datafact_model import Datafact
 
+logger = setup_logger()
 
 """
 ドリルダウンする木を生成する関数
 入力:
 - ドリルダウンする属性のリスト
 - data frame
+- s_node: スタートするノードのパス（例:["_root"]←根を表す, ["静岡県",2022]）
 出力:
-- 木構造を保存した辞書
+- 木構造を保存した辞書。
+    - キーはノードパスのタプル（例: (静岡県,2022)）
+    - 値は子ノードのパス(例: [[静岡県,2022,製造業], [静岡県,2022,サービス業],..., [静岡県,2022,IT業]])
 """
-def make_tree(drilldown_l, df):
+def make_tree(drilldown_l, df, s_node=["_root"]):
     """
     attrsで親ノードのパスを受け取り、その子のパス群のリストを返す
     入力:
     - drilldown_l: ["県","年","大分類"]
-    - attrs: ["静岡県",2021"]
+    - attrs: 親ノードのパス（例 ["静岡県",2021"]）
+    - df: 親ノードのdf(例 県==静岡 and 年==2021でfilterされたもの)
     出力
-    - [
-        ["静岡県",2021","製造業"],
-        ["静岡県",2021","サービス業"],
-        ...
-        ["静岡県",2021","IT業"],
-    ]
+    - df_parent: parentの部分空間におけるdf
+    - リスト: parentの子ノードへのパスを格納したリスト
+        [
+            ["静岡県",2021","製造業"],
+            ["静岡県",2021","サービス業"],
+            ...
+            ["静岡県",2021","IT業"],
+        ]
     """
-    def make_subtree(drilldown_l=drilldown_l, attrs=[], df=df):
+    def return_children(drilldown_l=drilldown_l, attrs=None, df_parent=None):
+        if(attrs==['_root']):
+            children_l = list(df_parent[drilldown_l[0]].unique())
+            return [[c] for c in children_l if(str(c)!="nan")]
         if(len(drilldown_l)==len(attrs)):
             return []
-        parents = dict([(drilldown_l[i],v) for i, v in enumerate(attrs)])
-        df_tmp = filter_df_by_parents(parents=parents, df=df)
-        children_l = list(df_tmp[drilldown_l[len(attrs)]].unique())
+        children_l = list(df_parent[drilldown_l[len(attrs)]].unique())
         return [attrs + [c] for c in children_l if(str(c)!="nan")]
-    
-    tree_d = {"root":make_subtree()}
-    all_nodes = tree_d["root"]
+
+    print(f"\n{datetime.fromtimestamp(time.time())}::ドリルダウンする木構造の作成を開始")
+    df_d = {tuple(s_node):df}
+    tree_d = {tuple(s_node):return_children(attrs=s_node,df_parent=df)}
+    all_nodes = copy.deepcopy(tree_d[tuple(s_node)])
     while all_nodes:
-        node = all_nodes.pop()
-        children_l = make_subtree(attrs=node)
+        c_node = all_nodes.pop()
+        key = tuple(c_node[:-1]) if(len(c_node)>1) else tuple(['_root'])
+        if(key not in df_d):
+            subject = make_subject(c_node, drilldown_l)
+            key2 = tuple(c_node[:-2])if(len(c_node)>2) else tuple(['_root'])
+            df_d[key] = filter_df_by_subject(subject=subject, df=df_d[key2])  # df_d[key] = filter_df_by_subject(subject=subject, df=df)
+        df_parent = df_d[key] 
+        children_l = return_children(attrs=c_node, df_parent=df_parent)
         if(children_l != []):
-            tree_d[tuple(node)] = children_l
+            tree_d[tuple(c_node)] = children_l
             all_nodes += children_l
     return tree_d
