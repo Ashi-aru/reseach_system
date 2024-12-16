@@ -59,6 +59,27 @@ def filter_df_by_parents(parents, df):
     return df[condition]
 
 """
+subjectとdfが与えられたとき、subjectに沿って抽出したdfを出力
+入力: 
+- subject
+    - [{"大分類":"製造業", "都道府県":"静岡県"}, "年", ["2022"]]
+    - [{"都道府県":"静岡県"}, "年", ["2022"]]
+    - [{}, "年", ["2022"]]
+    - [{},"",[]]
+- df
+出力: new_df
+"""
+def filter_df_by_subject(subject, df):
+    parents, col_name, filter_values = subject
+    if(subject==[{},"",[]]):
+        return df
+    else:
+        condition = (df[col_name].isin(filter_values))
+        for k, v in parents.items():
+            condition &= (df[k]==v)
+    return df[condition]
+
+"""
 datafact.subjectが与えられた時に、datafact or datafactsを判定。
 datafactsの場合は、何の集合か（年?県?）を示すAttribute名も返す
 入力: datafact.subject
