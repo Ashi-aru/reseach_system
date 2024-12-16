@@ -60,7 +60,7 @@
 {
     "drilldown1":{
         "reasoning":"業種において、企業規模がどのように分布しているかを理解することで、各業種の特徴を深堀りできます。",
-        "drilldown":["業種","従業員数"],
+        "drilldown":["業種","従業員数","年"],
         "expected_report":""
     },
     "drilldown2":{
