@@ -1,5 +1,7 @@
 from pathlib import Path
 import pandas as pd
+import time
+from datetime import datetime
 # 自分で定義した関数・クラスの読み込み
 from determine_attribute_type import determine_attribute_type
 from define_drilldown_path import define_drilldown_path
@@ -34,7 +36,9 @@ class DataFrameMetaInfo:
         self.analysis_goal = analysis_goal
         self.focus_attr_l = focus_attr_l  
 
+        print(f"\n{datetime.fromtimestamp(time.time())}::各属性タイプの判定を開始")
         self.attr_type_d = determine_attribute_type(sample_df=sample_df)
+        print(f"\n{datetime.fromtimestamp(time.time())}::ドリルダウンの定義を開始")
         self.drilldown_path_l = define_drilldown_path(
             main_df=self.df, 
             sample_df=self.sample_df, 
@@ -42,10 +46,12 @@ class DataFrameMetaInfo:
             analysis_goal=self.analysis_goal, 
             attribute_type=self.attr_type_d
         )
+        print(f"\n{datetime.fromtimestamp(time.time())}::Aggregation関数の選択を開始")
         self.aggregation_f_d = define_aggregation_F(
             att_l = self.focus_attr_l, 
             att_label_d = self.attr_type_d
         )
+        print(f"\n{datetime.fromtimestamp(time.time())}::ScalarArithmeticの演算子選択を開始")
         self.operator_d = define_scalar_arithmetic_operator(
             focus_att_l = self.focus_attr_l, 
             focus_att2func_d = self.aggregation_f_d, 

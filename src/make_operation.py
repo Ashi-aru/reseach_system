@@ -60,10 +60,10 @@ def define_aggregation_F(att_l, att_label_d):
         instruction = f"「{att_name}」属性に適応したい操作を以下から選択し、その数字をカンマ(,)区切りで入力してください"
         if(att_label_d[att_name]=="Quantitative"):
             choices = "\n".join([f"{k}:{v}" for k, v in FUNC_D.items() if(k<=6)])
-            user_choice = [int(n) for n in input(instruction+"\n\n"+choices+"\n").split(",")]
+            user_choice = [int(n) for n in input(instruction+"\n"+choices+"\n").split(",")]
         else:
             choices = "\n".join([f"{k}:{v}" for k, v in FUNC_D.items() if(k>=6)])
-            user_choice = [int(n) for n in input(instruction+"\n\n"+choices+"\n").split(",")]
+            user_choice = [int(n) for n in input(instruction+"\n"+choices+"\n").split(",")]
         return_d[att_name] = user_choice
     return return_d
 
