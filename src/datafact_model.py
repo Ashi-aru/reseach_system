@@ -6,6 +6,7 @@ import re
 import copy
 # 自分が定義したクラス、関数をインポート
 from datafact_manager import DatafactManager
+from debug import debug_datafact
 from operation2language import Aggregation, AttributeArithmetic, AttributeScalarArithmetic, AttributeSelection, Difference, GroupingOperation, ItemFiltering, ScalarArithmetic, Shift, Sort ,Sort_ordinal_d, ValueSelection, generate_IF_request
 from others import is_datafacts as Is_datafacts
 from logging_config import setup_logger
@@ -33,10 +34,10 @@ class Datafact:
     出力:
     - None(計算結果はDatafactManager.resultsに保存)
     """
-    def handle_datafact(self, manager, df=None):
+    def handle_datafact(self, manager, df=None, ordinal_d=None):
         parents, column_name, filter_values = self.subject
         operation_name, *operation_others = self.operation
-    
+        # logger.info(f'datafact:{debug_datafact(self)}')
         if(operation_name=="Aggregation"):
             # NOTE: subject=="_root"の時の対応を別途用意
             if(self.subject==[{},"",[]]):
@@ -69,7 +70,7 @@ class Datafact:
             result1 = manager.search_result(datafact1.subject, datafact1.operation)
             result2 = manager.search_result(datafact2.subject, datafact2.operation)
             operators = {"+": operator.add,"-": operator.sub,"*": operator.mul,"/": operator.truediv}
-            result = operators[op](result1, result2)
+            result = operators[op](result1, result2) if((result1 is not None) and (result2 is not None)) else None
             # logger.info(result)
             manager.update_results(self.subject,self.operation,result=result)
         # TODO: 同率順位の時の対応
@@ -80,21 +81,28 @@ class Datafact:
             subject2, operation2 = datafacts.subject, datafacts.operation
             ranks_d = manager.search_result(subject2, self.operation)
             if(ranks_d is not None):
-                # logger.info(ranks_d[filter_values[0]])
-                manager.update_results(self.subject,self.operation,result=ranks_d[filter_values[0]])
+                # logger.info(f'datafact_model.py::handle_datafact\n{ranks_d}')
+                result = ranks_d[filter_values[0]] if(filter_values[0] in ranks_d) else None
+                manager.update_results(self.subject,self.operation,result=result)
             else:
                 results_d = manager.search_result(subject2,operation2)
                 if(results_d is not None):
                     # results_dは{"k1":v1,"k2":v2,...}という形を想定
                     order = True if(order=="降順") else False
+                    # logger.info(f'datafact_model.py::handle_datafact\n{results_d}')
+                    None_l = [k for k,v in results_d.items() if(v is None)]
+                    results_d = dict([(k,v) for k,v in results_d.items() if(v is not None)])
                     sorted_results_d = dict(sorted(results_d.items(), key=lambda item: item[1], reverse=order))
                     ranks_d = dict([(key, i) for i, key in enumerate(list(sorted_results_d.keys()))])
+                    for k in None_l:
+                        ranks_d[k] = None
                     # 次に備えて、ranks_dは保存しておく
                     manager.update_results(subject2, self.operation,result=ranks_d)
-                    manager.update_results(self.subject,self.operation,result=ranks_d[filter_values[0]])
+                    self.handle_datafact(manager, df, ordinal_d)
                     # logger.info(ranks_d[filter_values[0]])
                 else:
-                    raise ValueError("Rankをつける値の計算をまだしてないんじゃないか！！")
+                    datafacts.handle_datafacts(manager,ordinal_d,df)
+                    self.handle_datafact(manager,df,ordinal_d)
         else:
             raise ValueError("サポートしていないOperation名を書くな！")
     
