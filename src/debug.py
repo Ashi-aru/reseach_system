@@ -1,7 +1,7 @@
 from pathlib import Path
 from datetime import date
 # 自分で定義した関数・クラスをimport
-from datafact_model import Datafact
+# from datafact_model import Datafact
 from logging_config import setup_logger
 
 PROJ_DIR = Path(__file__).resolve().parent.parent
@@ -25,7 +25,7 @@ def unpack_datafact(datafact):
     subject_str = f"[{parents},{column_name},{filter_values}]"
     if(operation_name=="Aggregation"):
         aggregation_col, f_name = operation_others
-        part_l.append(f"Datafact(subject={subject_str},operation=[{aggregation_col},{f_name}]),")
+        part_l.append(f"Datafact(subject={subject_str},operation=[Aggregation,{aggregation_col},{f_name}]),")
         return part_l
     elif(operation_name=="ScalarArithmetic"):
         op, datafact1, datafact2 = operation_others
@@ -111,7 +111,7 @@ def debug_operation(operation):
             tab_n += 1
     return all_str
 
-
+"""
 if __name__ == "__main__":
     datafact = Datafact(
         subject=[{"Shipping Address State":"MA"}, "y", ["*"]],
@@ -144,3 +144,4 @@ if __name__ == "__main__":
     )
     logger.info(debug_datafact(datafact))
     logger.info(debug_operation(datafact.operation))
+"""
