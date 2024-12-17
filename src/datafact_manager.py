@@ -35,7 +35,11 @@ class DatafactManager:
     - operation_key = ("Aggregation", "売上高", "mean")
     """
     def make_key(self, subject, operation):
-        subject_key = (tuple([(k,v) for k,v in subject[0].items()]), subject[1], (subject[2][0],))
+        # logger.info(f'subject={subject}')
+        if(subject == [{},"",[]]): # subjectがrootであった時の対応を追加
+            subject_key = (tuple([(k,v) for k,v in subject[0].items()]), subject[1], ())
+        else:
+            subject_key = (tuple([(k,v) for k,v in subject[0].items()]), subject[1], (subject[2][0],))
 
         operation_name, *operation_others = operation
         # logger.info(operation_others)
