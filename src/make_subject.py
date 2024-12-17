@@ -10,7 +10,7 @@ PROJ_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = PROJ_DIR/"data"
 TODAY = date.today().strftime("%Y-%m-%d")
 
-looger = setup_logger()
+logger = setup_logger()
 
 """
 ノードへのパスを受け取り、ノードのsubjectを出力する関数
@@ -24,5 +24,7 @@ def make_subject(node_path, drilldown_attr):
     if(node_path==["_root"]):
         return [{},"",[]]
     parents,filter_value = node_path[:-1], node_path[-1]
+    # logger.info(f'node_path={node_path}, parents={parents}, drilldown_attr={drilldown_attr}')
     parents = dict([(drilldown_attr[i], x) for i, x in enumerate(parents)])
+    # logger.info(f'len(node_path)={len(node_path)}, drilldown_attr={drilldown_attr}')
     return [parents, drilldown_attr[len(node_path)-1], [filter_value]]
