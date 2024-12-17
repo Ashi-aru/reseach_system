@@ -89,7 +89,7 @@ def list_drilldown_ideas(input_data):
     content = response.choices[0].message.content
     response = to_dict_recursive(response)
     # logger.info(content)
-    logger.info(json.dumps(response,ensure_ascii=False,indent=4))
+    # logger.info(json.dumps(response,ensure_ascii=False,indent=4))
     return [content, response]
 
 
@@ -113,7 +113,7 @@ def check_drilldown_ideas(drilldown_ideas, main_df, attribute_type):
         for column_name in drilldown["drilldown"]:
             node_n *= unique_num_d[column_name]
         drilldown_ideas[idea_n]["flg"] = (node_n<10**6)
-    logger.info(json.dumps(drilldown_ideas,ensure_ascii=False,indent=4))
+    logger.info(f'define_drilldown_path.py\n{json.dumps(drilldown_ideas,ensure_ascii=False,indent=4)}')
     return drilldown_ideas
 
 
@@ -147,13 +147,17 @@ def define_drilldown_path(main_df, sample_df, description, analysis_goal, attrib
     # ①
     sample_data = make_sample_data(sample_df=sample_df, attribute_type=attribute_type)
     input_data = json.dumps({"description":description, "analysis_goal":analysis_goal, "sample_data":sample_data})
-    output = list_drilldown_ideas(input_data=input_data)
-    # ②
-    drilldown_ideas = json.loads(output[0])
-    drilldown_ideas = check_drilldown_ideas(drilldown_ideas=drilldown_ideas, main_df=main_df, attribute_type=attribute_type)
-    print(json.dumps(drilldown_ideas,ensure_ascii=False,indent=4))
-    selected_drilldown = input("ドリルダウン名を入力してください:")
-    return drilldown_ideas[selected_drilldown]["drilldown"]
+    judge = True
+    while judge:
+        output = list_drilldown_ideas(input_data=input_data)
+        # ②
+        drilldown_ideas = json.loads(output[0])
+        drilldown_ideas = check_drilldown_ideas(drilldown_ideas=drilldown_ideas, main_df=main_df, attribute_type=attribute_type)
+        print(json.dumps(drilldown_ideas,ensure_ascii=False,indent=4))
+        drilldown_n = input("ドリルダウンを選択してください。（drilldown3を選ぶ場合は3を入力）再度ドリルダウン案を出力する場合はnを入力してください。:")
+        if(drilldown_n!='n'):
+            judge = False
+    return drilldown_ideas["drilldown"+drilldown_n]["drilldown"]
 
 
 if __name__ == "__main__":
