@@ -64,7 +64,7 @@ def make_templates(datafact_l, manager, ordinal_d, table_description):
         response = client.chat.completions.create(model=MODEL, messages=messages)
         content = json.loads(response.choices[0].message.content)
         response = to_dict_recursive(response)
-        logger.info(json.dumps(content,ensure_ascii=False,indent=4))
+        logger.info(f"make_templates.py\n{json.dumps(content,ensure_ascii=False,indent=4)}")
 
         for i,(k,v) in enumerate(content.items()):
             # logger.info(f"=====================\n{k}\n{v}")
