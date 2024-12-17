@@ -82,7 +82,7 @@ def define_scalar_arithmetic_operator(focus_att_l, focus_att2func_d, attr_type_d
     return_d = {}
     for focus_att in focus_att_l:
         for func_num in focus_att2func_d[focus_att]:
-            if(func_num<11 and attr_type_d[focus_att]=="Ordinal_t"): # 時系列データにのみSclarArithmeticを実施
+            if(func_num<11): # 時系列データにのみSclarArithmeticを実施
                 return_d[(focus_att,func_num)]=[2,4] # 数字の意味についてはOPERATOR_Dを参照
             else:
                 return_d[(focus_att,func_num)]=[None]
@@ -105,11 +105,21 @@ subject、被Aggregation属性、Aggregation_f, Operatorを受け取り、datafa
 出力
 - operation_l: datafact.operationのリスト。
 """
-# TODO: デバックの仕方を検討
-def make_operations(agg_attrs, agg_f_d, operator_d, subject, ordinal_d, step_n):
+def make_operations(agg_attrs, agg_f_d, operator_d, subject, ordinal_d, step_n, attr_type):
+    """
+    Scalar Arithmeticが可能であるかどうか判定する
+    """
+    def can_ScalarArithmetic(agg_attr, f_num, col_name):
+        if((operator_d[(agg_attr, f_num)]==[None]) or (attr_type[col_name]!='Ordinal_t')):
+            return False
+        n = ordinal_d[col_name].index(str(filter_value[0])) # NOTE: ここはintをstringに変更してサーチしている、、
+        if(n==len(ordinal_d[col_name])-1): # NOTE: ordinal_dは降順を想定しているが、昇順の方が良いのか、、？？
+            return False
+        return True
+
     operation_l = []
     parents, col_name, filter_value = subject
-
+    # logger.info(f'agg_attrs={agg_attrs}, agg_f_d={agg_f_d},\noperator_d={operator_d}, ordinal_d={ordinal_d}\nsubject={subject}')
     # NOTE: subject=="root"時の対応だけ別途用意、、。
     if(subject == [{},"",[]]):
         for agg_attr in agg_attrs:
@@ -121,12 +131,14 @@ def make_operations(agg_attrs, agg_f_d, operator_d, subject, ordinal_d, step_n):
     if(step_n==1):
         for agg_attr in agg_attrs:
             for f_num in agg_f_d[agg_attr]:
+                # Aggregation
                 operation_agg = ["Aggregation", agg_attr, F_NUM2F_NAME_D[f_num]]
                 operation_l.append(operation_agg)
-                n = ordinal_d[col_name].index(filter_value[0])
-                # NOTE: ordinal_dは降順を想定しているが、昇順の方が良いのか、、？？
-                if(n==len(ordinal_d[col_name])-1): 
-                    break
+
+                # Aggregation→Scalar
+                if(not can_ScalarArithmetic(agg_attr, f_num, col_name)):
+                    continue
+                n = ordinal_d[col_name].index(str(filter_value[0]))
                 subject1, subject2 = subject, [parents,col_name,[ordinal_d[col_name][n+1]]]
                 for op in operator_d[(agg_attr, f_num)]:
                     if(op is None): continue
@@ -140,11 +152,17 @@ def make_operations(agg_attrs, agg_f_d, operator_d, subject, ordinal_d, step_n):
     if(step_n==2):
         for agg_attr in agg_attrs:
             for f_num in agg_f_d[agg_attr]:
+                # Aggregation→Rank
                 if(f_num>=11): continue
                 operation_agg = ["Aggregation", agg_attr, F_NUM2F_NAME_D[f_num]]
                 subject_ = [parents, col_name, ["*"]]
                 operation_agg_rank = ["Rank", "降順", Datafact(subject_, operation_agg)]
                 operation_l.append(operation_agg_rank)
+
+                # Aggregation→Scalar→Rank
+                if(not can_ScalarArithmetic(agg_attr, f_num, col_name)):
+                    continue
+                n = ordinal_d[col_name].index(str(filter_value[0]))
                 subject1, subject2 = [parents, col_name, ["n"]], [parents, col_name, ["n-1"]]
                 for op in operator_d[(agg_attr, f_num)]:
                     if(op is None): continue
@@ -166,10 +184,9 @@ def make_operations(agg_attrs, agg_f_d, operator_d, subject, ordinal_d, step_n):
                 if(f_num>=11): continue
                 operation_agg = ["Aggregation", agg_attr, F_NUM2F_NAME_D[f_num]]
                 operation_agg_rank = ["Rank", "降順", Datafact([parents, col_name, ["*"]], operation_agg)]
-                n = ordinal_d[col_name].index(filter_value[0])
-                # NOTE: ordinal_dは降順を想定しているが、昇順の方が良いのか、、？？
-                if(n==len(ordinal_d[col_name])-1): 
-                    break
+                if(not can_ScalarArithmetic(agg_attr, f_num, col_name)):
+                    continue
+                n = ordinal_d[col_name].index(str(filter_value[0]))
                 subject1, subject2 = subject, [parents,col_name,[ordinal_d[col_name][n+1]]]
                 for op in operator_d[(agg_attr, f_num)]:
                     if(op is None): continue
