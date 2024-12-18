@@ -97,7 +97,7 @@ subject、被Aggregation属性、Aggregation_f, Operatorを受け取り、datafa
 - agg_f_d: define_aggregation_Fの出力。
 - operator_d: define_scalar_arithmetic_operatorの出力
 - subject: datafact.subject。src/make_subject.pyで生成
-- ordinal_d: （時系列の）Ordinal属性について、順序を保存した辞書.({"年":["2019","2020",...,"2024"],..})
+- ordinal_d: （時系列の）Ordinal属性について、順序を保存した辞書.({"年":[2019,2020,...,2024],..})
 - step_n: 1/2/3。
     - 1: Aggregation、Aggregation→ScalarArithmeticを実行
     - 2: Aggregation→Rank、Aggregation→ScalarArithmetic→Rankを実行
@@ -112,7 +112,7 @@ def make_operations(agg_attrs, agg_f_d, operator_d, subject, ordinal_d, step_n, 
     def can_ScalarArithmetic(agg_attr, f_num, col_name):
         if((operator_d[(agg_attr, f_num)]==[None]) or (attr_type[col_name]!='Ordinal_t')):
             return False
-        n = ordinal_d[col_name].index(str(filter_value[0])) # NOTE: ここはintをstringに変更してサーチしている、、
+        n = ordinal_d[col_name].index(filter_value[0])
         if(n==len(ordinal_d[col_name])-1): # NOTE: ordinal_dは降順を想定しているが、昇順の方が良いのか、、？？
             return False
         return True
@@ -162,7 +162,7 @@ def make_operations(agg_attrs, agg_f_d, operator_d, subject, ordinal_d, step_n, 
                 # Aggregation→Scalar→Rank
                 if(not can_ScalarArithmetic(agg_attr, f_num, col_name)):
                     continue
-                n = ordinal_d[col_name].index(str(filter_value[0]))
+                n = ordinal_d[col_name].index(filter_value[0])
                 subject1, subject2 = [parents, col_name, ["n"]], [parents, col_name, ["n-1"]]
                 for op in operator_d[(agg_attr, f_num)]:
                     if(op is None): continue
@@ -186,7 +186,7 @@ def make_operations(agg_attrs, agg_f_d, operator_d, subject, ordinal_d, step_n, 
                 operation_agg_rank = ["Rank", "降順", Datafact([parents, col_name, ["*"]], operation_agg)]
                 if(not can_ScalarArithmetic(agg_attr, f_num, col_name)):
                     continue
-                n = ordinal_d[col_name].index(str(filter_value[0]))
+                n = ordinal_d[col_name].index(filter_value[0])
                 subject1, subject2 = subject, [parents,col_name,[ordinal_d[col_name][n+1]]]
                 for op in operator_d[(agg_attr, f_num)]:
                     if(op is None): continue

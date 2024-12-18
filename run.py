@@ -25,7 +25,7 @@ if(__name__ == '__main__'):
     df_description = "2018年から2022年にかけての米国の5027人のAmazon.comユーザーの購入履歴。データセットのサイズは300MB超。"
     analysis_goal = "年毎の地理的な購買パターンの分析"
     focus_attr_l = ["Purchase Price Per Unit","Quantity"]
-    ordinal_d = {"y":['2024', '2023', '2022', '2021', '2020', '2019', '2018']}
+    ordinal_d = {"y":[2024, 2023, 2022, 2021, 2020, 2019, 2018]}
     s_node = ["_root"] # root以外の時は、ノードへのパス（例:["製造業","静岡県",2022]）となる。
 
 

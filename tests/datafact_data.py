@@ -134,16 +134,16 @@ convert_datafacts_1_2 = Datafact(
 )
 # 2. Aggregation→ScalarArithmetic
 convert_datafact_2 = Datafact(
-    subject=[{"Shipping Address State":"MA"}, "y", ["2022"]],
+    subject=[{"Shipping Address State":"MA"}, "y", [2022]],
     operation=[
         "ScalarArithmetic", 
         "-",
         Datafact(
-            subject=[{"Shipping Address State":"MA"},"y",[str(2022)]],
+            subject=[{"Shipping Address State":"MA"},"y",[2022]],
             operation=["Aggregation", "Purchase Price Per Unit", "mean"]
         ),
         Datafact(
-            subject=[{"Shipping Address State":"MA"},"y",[str(2021)]],
+            subject=[{"Shipping Address State":"MA"},"y",[2021]],
             operation=["Aggregation", "Purchase Price Per Unit", "mean"]
         )
     ]
@@ -214,7 +214,7 @@ convert_datafacts_3_2 = Datafact(
 )
 # 4. Aggregation→Scalar→Ran
 convert_datafact_4 = Datafact(
-    subject=[{"Shipping Address State":"MA"}, "y", ["2022"]],
+    subject=[{"Shipping Address State":"MA"}, "y", [2022]],
     operation=[
         "Rank",
         "降順",
@@ -281,12 +281,12 @@ convert_datafacts_4_2 = Datafact(
 )
 # 5. Aggregation→Rank→ScalarArithmetic
 convert_datafact_5 = Datafact(
-    subject=[{"Shipping Address State":"MA"}, "y", ["2022"]],
+    subject=[{"Shipping Address State":"MA"}, "y", [2022]],
     operation=[
         "ScalarArithmetic", 
         "-",
         Datafact(
-            subject=[{"Shipping Address State":"MA"},"y",[str(2022)]],
+            subject=[{"Shipping Address State":"MA"},"y",[2022]],
             operation=[
                 "Rank",
                 "降順",
@@ -297,7 +297,7 @@ convert_datafact_5 = Datafact(
             ]
         ),
         Datafact(
-            subject=[{"Shipping Address State":"MA"},"y",[str(2021)]],
+            subject=[{"Shipping Address State":"MA"},"y",[2021]],
             operation=[
                 "Rank",
                 "降順",

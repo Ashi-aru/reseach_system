@@ -12,7 +12,7 @@ from make_operation import make_operations
 from logging_config import setup_logger
 import datafact_data
 
-ordinal_d = {"年":['2024', '2023', '2022', '2021', '2020', '2019', '2018']}
+ordinal_d = {"年":[2024, 2023, 2022, 2021, 2020, 2019, 2018]}
 looger = setup_logger()
 
 

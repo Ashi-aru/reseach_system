@@ -4,32 +4,32 @@ sys.path.append('/Users/ashikawaharuki/Desktop/research/TDB/test/system/src')
 from datafact_model import Datafact
 
 
-ordinal_d = {"年":['2024', '2023', '2022', '2021', '2020', '2019', '2018']}
+ordinal_d = {"年":[2024, 2023, 2022, 2021, 2020, 2019, 2018]}
 
 
 datafact1 = Datafact(
-    subject = [{"大分類":"製造業","年":"2022"},"都道府県",["静岡"]],
+    subject = [{"大分類":"製造業","年":2022},"都道府県",["静岡"]],
     operation = [
         "ScalarArithmetic",
         "-",
         Datafact(
-            subject = [{"大分類":"製造業","年":"2022"},"都道府県",["静岡"]],
+            subject = [{"大分類":"製造業","年":2022},"都道府県",["静岡"]],
             operation = [
                 "Rank",
                 "降順",
                 Datafact(
-                    subject = [{"大分類":"製造業","年":"2022"},"都道府県",["*"]],
+                    subject = [{"大分類":"製造業","年":2022},"都道府県",["*"]],
                     operation = ["Aggregation", "売上", "sum"]
                 )
             ]
         ),
         Datafact(
-            subject = [{"大分類":"製造業","年":"2021"},"都道府県",["静岡"]],
+            subject = [{"大分類":"製造業","年":2021},"都道府県",["静岡"]],
             operation = [
                 "Rank",
                 "降順",
                 Datafact(
-                    subject = [{"大分類":"製造業","年":"2021"},"都道府県",["*"]],
+                    subject = [{"大分類":"製造業","年":2021},"都道府県",["*"]],
                     operation = ["Aggregation", "売上", "sum"]
                 )
             ]
@@ -38,23 +38,23 @@ datafact1 = Datafact(
 )
 
 datafact2 = Datafact(
-    subject=[{"大分類":"サービス業"}, "年", ["2022"]],
+    subject=[{"大分類":"サービス業"}, "年", [2022]],
     operation=[
         "ScalarArithmetic", 
         "/",
         Datafact(
-            subject=[{"大分類":"サービス業"}, "年", ["2022"]],
+            subject=[{"大分類":"サービス業"}, "年", [2022]],
             operation=["Aggregation", "売上", "sum_percent"]
         ),
         Datafact(
-            subject=[{"大分類":"サービス業"}, "年", ["2021"]],
+            subject=[{"大分類":"サービス業"}, "年", [2021]],
             operation=["Aggregation", "売上", "sum_percent"]
         )
     ]
 )
 
 datafact3 = Datafact(
-    subject=[{"大分類":"サービス業"}, "年", ["2023"]],
+    subject=[{"大分類":"サービス業"}, "年", [2023]],
     operation=[
         "Rank",
         "降順",

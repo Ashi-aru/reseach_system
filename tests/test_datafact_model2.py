@@ -22,7 +22,7 @@ df["y"] = df["Order Date"].dt.strftime("%Y")
 df_MA = df[df["Shipping Address State"]=="MA"]
 
 manager = DatafactManager()
-ordinal_d = {"y":['2024', '2023', '2022', '2021', '2020', '2019', '2018']}
+ordinal_d = {"y":[2024, 2023, 2022, 2021, 2020, 2019, 2018]}
 # datafactを事前に計算しておく
 # Aggregationバージョン
 # datafact1 → [{"Shipping Address State":"MA"}, "y", "*"]のパターン
