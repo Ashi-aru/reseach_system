@@ -103,7 +103,7 @@ def cal_subtree_nodes(s_node, tree_d, manager, ordinal_d, df_meta_info, df):
         operations = make_operations(agg_attrs, agg_f_d, operator_d, subject, ordinal_d, step_n, attr_type)
         for operation in operations:
             datafact = Datafact(subject=subject, operation=operation)
-            # logger.info(f'drilldown.py:\n{debug_datafact(datafact)}')
+            logger.info(f'drilldown.py:\n{debug_datafact(datafact)}')
             print(debug_datafact(datafact))
             datafact.handle_datafact(manager, df, ordinal_d)
             # logger.info(f'drilldown.py:\n{manager.results}')
@@ -120,6 +120,7 @@ def cal_subtree_nodes(s_node, tree_d, manager, ordinal_d, df_meta_info, df):
 
     for step_n in range(1,4):
         print(f'step_{step_n}')
+        logger.info(f'\n====================================step_{step_n}===============================\n')
         dfs(node=s_node,df=df,step_n=step_n)
 
 

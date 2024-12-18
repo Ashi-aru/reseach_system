@@ -47,8 +47,11 @@ if(__name__ == '__main__'):
     drilldown_path = ["Shipping Address State","Category"]→make_tree計算時間1sec以下
     """
     tree_d = make_tree(drilldown_l=df_meta_info.drilldown_path_l, df=df_meta_info.df)
+    s = time.time()
     print(f"\n{datetime.fromtimestamp(time.time())}::各ノードの計算を開始")
     cal_subtree_nodes(s_node, tree_d, manager, ordinal_d, df_meta_info, df_meta_info.df)
+    e = time.time()
+    print(f"\n{datetime.fromtimestamp(time.time())}::各ノードの計算を終了。\n計算時間 = {e-s}s")
     result1 = manager.search_result(
         subject = [{'y':2022},'Shipping Address State',['*']],
         operation = ["Aggregation", "Purchase Price Per Unit", "mean"]

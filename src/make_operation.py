@@ -3,6 +3,7 @@ from datetime import date
 # 自分で定義した関数・クラスをimport
 from datafact_model import Datafact
 from logging_config import setup_logger
+from debug import debug_datafact
 
 
 PROJ_DIR = Path(__file__).resolve().parent.parent
@@ -15,7 +16,7 @@ FUNC_D = {
     1:"合計値を計算(sum)",
     2:"合計値の割合を計算(sum_percent)",
     3:"平均値を計算(mean)",
-    4:"平均値の割合を計算(mean_percent)",
+    # 4:"平均値の割合を計算(mean_percent)",
     5:"最大値を計算(max)",
     6:"最小値を計算(min)",
     7:"中央値を計算(meadian)",
@@ -59,10 +60,10 @@ def define_aggregation_F(att_l, att_label_d):
     for att_name in att_l:
         instruction = f"「{att_name}」属性に適応したい操作を以下から選択し、その数字をカンマ(,)区切りで入力してください"
         if(att_label_d[att_name]=="Quantitative"):
-            choices = "\n".join([f"{k}:{v}" for k, v in FUNC_D.items() if(k<=6)])
+            choices = "\n".join([f"{k}:{v}" for k, v in FUNC_D.items() if(k<=9)])
             user_choice = [int(n) for n in input(instruction+"\n"+choices+"\n").split(",")]
         else:
-            choices = "\n".join([f"{k}:{v}" for k, v in FUNC_D.items() if(k>=6)])
+            choices = "\n".join([f"{k}:{v}" for k, v in FUNC_D.items() if(k>=8)])
             user_choice = [int(n) for n in input(instruction+"\n"+choices+"\n").split(",")]
         return_d[att_name] = user_choice
     return return_d
@@ -138,7 +139,7 @@ def make_operations(agg_attrs, agg_f_d, operator_d, subject, ordinal_d, step_n, 
                 # Aggregation→Scalar
                 if(not can_ScalarArithmetic(agg_attr, f_num, col_name)):
                     continue
-                n = ordinal_d[col_name].index(str(filter_value[0]))
+                n = ordinal_d[col_name].index(filter_value[0])
                 subject1, subject2 = subject, [parents,col_name,[ordinal_d[col_name][n+1]]]
                 for op in operator_d[(agg_attr, f_num)]:
                     if(op is None): continue
@@ -196,6 +197,7 @@ def make_operations(agg_attrs, agg_f_d, operator_d, subject, ordinal_d, step_n, 
                         Datafact(subject1, operation_agg_rank),
                         Datafact(subject2, operation_agg_rank)
                     ]
+                    logger.info(f'make_operation.py:\n{operation_agg_rank_scalar}')
                     operation_l.append(operation_agg_rank_scalar)
     return operation_l
     
