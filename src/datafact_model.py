@@ -39,38 +39,58 @@ class Datafact:
         operation_name, *operation_others = self.operation
         # logger.info(f'datafact:{debug_datafact(self)}')
         if(operation_name=="Aggregation"):
-            # NOTE: subject=="_root"の時の対応を別途用意
-            if(self.subject==[{},"",[]]):
-                df_filtered = df
-            else:
-                df_filtered = df[df[column_name].isin(filter_values)]
-            # Operation:["Aggregation", カラム名, Aggregation_Func]
             aggregation_col, f_name = operation_others
-            s, s_filtered = df[aggregation_col], df_filtered[aggregation_col]
-            f = {
-                "sum": (lambda s_filtered,_:s_filtered.sum()),
-                "sum_percent": (lambda s_filtered,s:(s_filtered.sum()/s.sum())*100),
-                "mean": (lambda s_filtered,_:s_filtered.mean()),
-                # "mean_percent": (lambda s_filtered,s:(s_filtered.mean()/s.mean())*100),
-                "max": (lambda s_filtered,_:s_filtered.max()),
-                "min": (lambda s_filtered,_:s_filtered.min()),
-                "median": (lambda s_filtered,_:s_filtered.median()),
-                "count": (lambda s_filtered,_:s_filtered.count()),
-                "count_percent": (lambda s_filtered,s:(s_filtered.count()/s.count())*100),
-                "nunique": (lambda s_filtered,_:s_filtered.nunique()),
-                "unique": (lambda s_filtered,_:s_filtered.unique())
-            }
-            result = f[f_name](s_filtered, s)
-            # logger.info(result)
-            manager.update_results(self.subject,self.operation,result=result)
+            if(self.subject==[{},"",[]]): # subjectがルートである時の対応
+                s, s_filtered = df[aggregation_col], df[aggregation_col]
+                f = {
+                    "sum": (lambda s_filtered,_:s_filtered.sum()),
+                    "sum_percent": (lambda s_filtered,s:(s_filtered.sum()/s.sum())*100),
+                    "mean": (lambda s_filtered,_:s_filtered.mean()),
+                    # "mean_percent": (lambda s_filtered,s:(s_filtered.mean()/s.mean())*100),
+                    "max": (lambda s_filtered,_:s_filtered.max()),
+                    "min": (lambda s_filtered,_:s_filtered.min()),
+                    "median": (lambda s_filtered,_:s_filtered.median()),
+                    "count": (lambda s_filtered,_:s_filtered.count()),
+                    "count_percent": (lambda s_filtered,s:(s_filtered.count()/s.count())*100),
+                    "nunique": (lambda s_filtered,_:s_filtered.nunique()),
+                    "unique": (lambda s_filtered,_:s_filtered.unique())
+                }
+                result = f[f_name](s_filtered, s)
+                manager.update_results(self.subject,self.operation,result=result)
+                return
 
+            results_d = manager.search_result([parents, column_name, ["*"]], self.operation)
+            if(results_d is None):
+                f = {
+                        "sum": (lambda group,_:group.sum()),
+                        "sum_percent": (lambda group,total:(group.sum()/total)*100),
+                        "mean": (lambda group,_:group.mean()),
+                        # "mean_percent": (lambda group,total:(group.mean()/total.mean())*100),
+                        "max": (lambda group,_:group.max()),
+                        "min": (lambda group,_:group.min()),
+                        "median": (lambda group,_:group.median()),
+                        "count": (lambda group,_:group.count()),
+                        "count_percent": (lambda group,total:(group.count()/total)*100),
+                        "nunique": (lambda group,_:group.nunique()),
+                        "unique": (lambda group,_:group.unique())
+                    }
+                grouped_s = f[f_name](df.groupby(column_name)[aggregation_col], df[aggregation_col].sum())
+                results_d = dict([(k,v) for k, v in zip(grouped_s.index, grouped_s)])
+                manager.update_results([parents, column_name, ["*"]],self.operation,result=results_d)
+                self.handle_datafact(manager, df, ordinal_d)
+            else:
+                result = results_d[filter_values[0]] if(filter_values[0] in results_d) else None
+                manager.update_results(self.subject, self.operation, result)
         elif(operation_name=="ScalarArithmetic"):
             # Operation:["ScalarArithmetic", 演算子, datafact1, datafact2]
             op, datafact1, datafact2 = operation_others
             result1 = manager.search_result(datafact1.subject, datafact1.operation)
             result2 = manager.search_result(datafact2.subject, datafact2.operation)
             operators = {"+": operator.add,"-": operator.sub,"*": operator.mul,"/": operator.truediv}
-            result = operators[op](result1, result2) if((result1 is not None) and (result2 is not None)) else None
+            if((op=='/' and result2==0) or (None in [result1, result2])): 
+                result = None
+            else:
+                result = operators[op](result1, result2) if() else None
             # logger.info(result)
             manager.update_results(self.subject,self.operation,result=result)
         # TODO: 同率順位の時の対応

@@ -114,9 +114,9 @@ def cal_subtree_nodes(s_node, tree_d, manager, ordinal_d, df_meta_info, df):
         run_node_task(subject, df=df, step_n=step_n)
         if(tuple(node) not in tree_d):
             return
+        df_parent = filter_df_by_subject(subject,df)
         for c_node in tree_d[tuple(node)]:
-            df_child = filter_df_by_subject(subject,df)
-            dfs(c_node, df_child, step_n)
+            dfs(c_node, df_parent, step_n)
 
     for step_n in range(1,4):
         print(f'step_{step_n}')
