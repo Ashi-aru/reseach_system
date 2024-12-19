@@ -197,7 +197,7 @@ def make_operations(agg_attrs, agg_f_d, operator_d, subject, ordinal_d, step_n, 
                         Datafact(subject1, operation_agg_rank),
                         Datafact(subject2, operation_agg_rank)
                     ]
-                    logger.info(f'make_operation.py:\n{operation_agg_rank_scalar}')
+                    # logger.info(f'make_operation.py:\n{operation_agg_rank_scalar}')
                     operation_l.append(operation_agg_rank_scalar)
     return operation_l
     
