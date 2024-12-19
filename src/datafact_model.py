@@ -90,8 +90,7 @@ class Datafact:
             if((op=='/' and result2==0) or (None in [result1, result2])): 
                 result = None
             else:
-                result = operators[op](result1, result2) if() else None
-            # logger.info(result)
+                result = operators[op](result1, result2)
             manager.update_results(self.subject,self.operation,result=result)
         # TODO: 同率順位の時の対応
         elif(operation_name=="Rank"):
