@@ -201,3 +201,75 @@ def make_operations(agg_attrs, agg_f_d, operator_d, subject, ordinal_d, step_n, 
                     operation_l.append(operation_agg_rank_scalar)
     return operation_l
     
+
+"""
+datafacts用に、datafact.operationのリストを出力する関数
+
+入力
+- agg_attrs: 被Aggregation属性のリスト。
+- agg_f_d: define_aggregation_Fの出力。
+- operator_d: define_scalar_arithmetic_operatorの出力
+- subject: datafact.subject。src/make_subject.pyで生成
+- ordinal_d: （時系列の）Ordinal属性について、順序を保存した辞書.({"年":[2019,2020,...,2024],..})
+出力
+- operation_l: datafact.operationのリスト。
+"""
+def make_operations_for_datafacts(agg_attrs, agg_f_d, operator_d, subject, ordinal_d, attr_type):
+    """
+    Scalar Arithmeticが可能であるかどうか判定する
+    """
+    def can_ScalarArithmetic(agg_attr, f_num, col_name):
+        if((operator_d[(agg_attr, f_num)]==[None]) or (attr_type[col_name]!='Ordinal_t')):
+            return False
+        # n = ordinal_d[col_name].index(filter_value[0])
+        # if(n==len(ordinal_d[col_name])-1): # NOTE: ordinal_dは降順を想定しているが、昇順の方が良いのか、、？？
+        #     return False
+        return True
+    
+    """
+    ScalarArithmetic部分を作る関数
+    """
+    def make_ScalarArithmetic(operation, operation_l):
+        if(filter_value==["*"]):
+            subject1, subject2 = [parents, col_name, ["n"]], [parents, col_name, ["n-1"]]
+        else:
+            parents1 = dict([(k,v) if(v!="*") else (k,"n") for k,v in parents.items()])
+            parents2 = dict([(k,v) if(v!="*") else (k,"n-1") for k,v in parents.items()])
+            subject1, subject2 = [parents1, col_name, filter_value], [parents2, col_name, filter_value]
+        for op in operator_d[(agg_attr, f_num)]:
+            if(op is None): continue
+            operation_scalar = [
+                "ScalarArithmetic", 
+                OPERATOR_D[op], 
+                Datafact(subject1, operation),
+                Datafact(subject2, operation)
+            ]
+            operation_l.append(operation_scalar)
+        return operation_l
+
+    operation_l = []
+    parents, col_name, filter_value = subject
+    
+    # Aggregation, Aggregation→Scalar
+    for agg_attr in agg_attrs:
+        for f_num in agg_f_d[agg_attr]:
+            # Aggregation
+            operation_agg = ["Aggregation", agg_attr, F_NUM2F_NAME_D[f_num]]
+            operation_l.append(operation_agg)
+
+            # Aggregation→Scalar
+            if(not can_ScalarArithmetic(agg_attr, f_num, col_name)):
+                continue
+            operation_l = make_ScalarArithmetic(operation_agg, operation_l)
+
+    # Aggregation→Rank→Scalar
+    for agg_attr in agg_attrs:
+        for f_num in agg_f_d[agg_attr]:
+            if(f_num>=11): continue
+            operation_agg = ["Aggregation", agg_attr, F_NUM2F_NAME_D[f_num]]
+            operation_agg_rank = ["Rank", "降順", Datafact([parents, col_name, ["*"]], operation_agg)]
+            if(not can_ScalarArithmetic(agg_attr, f_num, col_name)):
+                continue
+            operation_l = make_ScalarArithmetic(operation_agg_rank, operation_l)
+    return operation_l
+
