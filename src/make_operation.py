@@ -233,9 +233,8 @@ def make_operations_for_datafacts(agg_attrs, agg_f_d, operator_d, subject, ordin
         if(filter_value==["*"]):
             subject1, subject2 = [parents, col_name, ["n"]], [parents, col_name, ["n-1"]]
         else:
-            parents1 = dict([(k,v) if(v!="*") else (k,"n") for k,v in parents.items()])
-            parents2 = dict([(k,v) if(v!="*") else (k,"n-1") for k,v in parents.items()])
-            subject1, subject2 = [parents1, col_name, filter_value], [parents2, col_name, filter_value]
+            n = ordinal_d[col_name].index(filter_value[0])
+            subject1, subject2 = [parents, col_name, filter_value], [parents, col_name, [ordinal_d[col_name][n+1]]]
         for op in operator_d[(agg_attr, f_num)]:
             if(op is None): continue
             operation_scalar = [
@@ -263,13 +262,13 @@ def make_operations_for_datafacts(agg_attrs, agg_f_d, operator_d, subject, ordin
             operation_l = make_ScalarArithmetic(operation_agg, operation_l)
 
     # Aggregation→Rank→Scalar
-    for agg_attr in agg_attrs:
-        for f_num in agg_f_d[agg_attr]:
-            if(f_num>=11): continue
-            operation_agg = ["Aggregation", agg_attr, F_NUM2F_NAME_D[f_num]]
-            operation_agg_rank = ["Rank", "降順", Datafact([parents, col_name, ["*"]], operation_agg)]
-            if(not can_ScalarArithmetic(agg_attr, f_num, col_name)):
-                continue
-            operation_l = make_ScalarArithmetic(operation_agg_rank, operation_l)
+    # for agg_attr in agg_attrs:
+    #     for f_num in agg_f_d[agg_attr]:
+    #         if(f_num>=11): continue
+    #         operation_agg = ["Aggregation", agg_attr, F_NUM2F_NAME_D[f_num]]
+    #         operation_agg_rank = ["Rank", "降順", Datafact([parents, col_name, ["*"]], operation_agg)]
+    #         if(not can_ScalarArithmetic(agg_attr, f_num, col_name)):
+    #             continue
+    #         operation_l = make_ScalarArithmetic(operation_agg_rank, operation_l)
     return operation_l
 
