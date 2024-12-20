@@ -34,6 +34,7 @@ def detect_outliers(data, alpha=0.05):
     outliersライブラリを用いて複数の外れ値を最大値方向と最小値方向に対して検出し、
     p値を計算して出力する。
     """
+    data = dict([(k,v) for k,v in data.items() if v is not None])
     result_d = {}
     while len(data) >= 3:  # Grubbs検定には少なくとも3つのデータが必要
         values, keys = list(data.values()), list(data.keys())

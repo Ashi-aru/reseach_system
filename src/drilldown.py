@@ -149,41 +149,43 @@ def cal_subtree_significance(s_node, tree_d, manager, ordinal_d, df_meta_info):
     datafactsの列挙を実施
     """
     def list_datafacts(s_node, datafacts_l):
+        """
+        s_nodeが末端ノードではない時に、s_nodeの子達をdatafactsとしてまとめる
+        - subject=[{},"C",["*"]] 
+        - subject=[{"A":"a"},"C",["*"]] 
+        """
+        if(tuple(s_node) in tree_d):
+            node_path = copy.deepcopy(s_node)
+            if(node_path==["_root"]):
+                node_path = []
+            node_path.append('*')
+            subject = make_subject(node_path=node_path, drilldown_attr=drilldown_path_l)
+            operation_l = make_operations_for_datafacts(agg_attrs, agg_f_d, operator_d, subject, ordinal_d, attr_type)
+            for operation in operation_l:
+                datafacts = Datafact(subject=subject, operation=operation)
+                datafacts_l.append(datafacts)
+        """
+        ルートから見て、s_nodeが孫以降のノードである時、以下をdatafactsとしてまとめる
+        - subject=[{"A":"a","B":"*"},"C",["c"]] 
+        - subject=[{"A":"*"},"B",["b"]] 
+        ↓ これは考えない。
+        - subject=[{"A":"*","B":"*"},"C",["c"]] 
+        """
+        if(len(s_node)>=2):
+            node_path = copy.deepcopy(s_node)
+            node_path[-2] = "*"
+            subject = make_subject(node_path=node_path, drilldown_attr=drilldown_path_l)
+            operation_l = make_operations_for_datafacts(agg_attrs, agg_f_d, operator_d, subject, ordinal_d, attr_type)
+            for operation in operation_l:
+                datafacts = Datafact(subject=subject, operation=operation)
+                datafacts_l.append(datafacts)
+        """
+        再帰的に上の処理を繰り返す
+        """
+        if(tuple(s_node) not in tree_d): 
+            return
         for c_node in tree_d[tuple(s_node)]:
-            """
-            c_nodeが末端ノードではない時に、c_nodeの子達をdatafactsとしてまとめる
-            - subject=[{},"C",["*"]] 
-            - subject=[{"A":"a"},"C",["*"]] 
-            """
-            if(tuple(c_node) in tree_d):
-                node_path = copy.deepcopy(c_node)
-                node_path[-1] = "*"
-                subject = make_subject(node_path=node_path, drilldown_attr=drilldown_path_l)
-                operation_l = make_operations_for_datafacts(agg_attrs, agg_f_d, operator_d, subject, ordinal_d, attr_type)
-                for operation in operation_l:
-                    datafacts = Datafact(subject=subject, operation=operation)
-                    datafacts_l.append(datafacts)
-            """
-            ルートから見て、c_nodeが孫以降のノードである時、以下をdatafactsとしてまとめる
-            - subject=[{"A":"a","B":"*"},"C",["c"]] 
-            - subject=[{"A":"*"},"B",["b"]] 
-            ↓ これは考えない。
-            - subject=[{"A":"*","B":"*"},"C",["c"]] 
-            """
-            if(len(c_node)>=2):
-                node_path = copy.deepcopy(c_node)
-                node_path[-2] = "*"
-                subject = make_subject(node_path=node_path, drilldown_attr=drilldown_path_l)
-                operation_l = make_operations_for_datafacts(agg_attrs, agg_f_d, operator_d, subject, ordinal_d, attr_type)
-                for operation in operation_l:
-                    datafacts = Datafact(subject=subject, operation=operation)
-                    datafacts_l.append(datafacts)
-            
-            if(tuple(c_node) in tree_d):
-                list_datafacts(c_node, datafacts_l)
-            else:
-                return
-        return datafacts_l
+            list_datafacts(c_node, datafacts_l)
     
     """
     datafactsに含まれるdatafactを集めてくる
@@ -191,6 +193,7 @@ def cal_subtree_significance(s_node, tree_d, manager, ordinal_d, df_meta_info):
     def collect_values(datafacts):
         values = manager.search_result(datafacts.subject, datafacts.operation)
         if(values is not None):
+            # filter_values=['*']の時はほとんどここで蹴りがつく。
             return values
         values = {}
         parents, col_name, filter_values = datafacts.subject
@@ -199,7 +202,7 @@ def cal_subtree_significance(s_node, tree_d, manager, ordinal_d, df_meta_info):
         # print(f'drilldown.py:\n{key}')
 
         if(operation_name=='Aggregation'):
-            if(values==['*']):
+            if(filter_values==['*']):
                 node_path = tuple([v for _, v in parents.items()])
             elif(flg and len(parents)==1):
                 node_path = tuple(["_root"])
@@ -215,35 +218,59 @@ def cal_subtree_significance(s_node, tree_d, manager, ordinal_d, df_meta_info):
 
         elif(operation_name=='ScalarArithmetic'):
             op, datafact1, datafact2 = operation_others
-            operation_ = datafact1.operation
-            if(values==['*']): # c_node:['静岡県',2018], ['静岡県',2019], ..
+            if(filter_values==['*']): # c_node:['静岡県',2018], ['静岡県',2019], ..
                 node_path = tuple([v for _, v in parents.items()])
+                for c_node in tree_d[node_path]: 
+                    c_subject = make_subject(c_node, drilldown_path_l)
+                    logger.info(f'drilldown.py::filter_values==["*"]の方\n{c_subject}')
+                    c_parents, c_col, c_filter_values = c_subject
+                    n = ordinal_d[c_col].index(c_filter_values[0])
+                    subject1, subject2 = c_subject, [c_parents,c_col,[ordinal_d[c_col][n+1]]]
+                    c_operation = [
+                        "ScalarArithmetic", 
+                        op, 
+                        Datafact(subject1, datafact1.operation),
+                        Datafact(subject2, datafact2.operation)
+                    ]
+                    values[c_node[-1]] = manager.search_result(c_subject, c_operation)
             elif(flg): # c_node:['静岡県','製造業',2018], ['静岡県','サービス業',2018], ..
                 node_path = tuple(["_root"]) if(len(parents)==1) else tuple([k for k in parents.keys() if (k!=key)][0])
+                for c_node in tree_d[node_path]:
+                    c_node = copy.deepcopy(c_node)
+                    c_node.append(filter_values[0])
+                    c_subject = make_subject(c_node, drilldown_path_l)
+                    c_parents, c_col, c_filter_values = c_subject
+                    n = ordinal_d[c_col].index(c_filter_values[0])
+                    subject1, subject2 = c_subject, [c_parents,c_col,[ordinal_d[c_col][n+1]]]
+                    c_operation = [
+                        "ScalarArithmetic", 
+                        op, 
+                        Datafact(subject1, datafact1.operation),
+                        Datafact(subject2, datafact2.operation)
+                    ]
+                    values[c_node[-1]] = manager.search_result(c_subject, c_operation)
             else:
                 raise ValueError('datafactsではありません')
 
-            for c_node in tree_d[node_path]: 
-                c_subject = make_subject(c_node, drilldown_path_l)
-                c_parents, c_col, c_filter_values = c_subject
-                n = ordinal_d[c_col].index(c_filter_values[0])
-                subject1, subject2 = c_subject, [c_parents,c_col,[ordinal_d[c_col][n+1]]]
-                c_operation = [
-                    "ScalarArithmetic", 
-                    op, 
-                    Datafact(subject1, operation_),
-                    Datafact(subject2, operation_)
-                ]
-                values[c_node[-1]] = manager.search_result(c_subject, c_operation)
             return values
         else:
             raise ValueError(f'想定していないoperation_nameです:{operation_name}')
 
-    datafacts_l = list_datafacts(s_node, [])
+    datafacts_l = []
+    list_datafacts(s_node, datafacts_l)
+    print(f"datafactsの列挙おわおわり。len(datafacts_l={len(datafacts_l)})")
+    n = 0
+
     for datafacts in datafacts_l:
-        values = collect_values(datafacts)
-        logger.info(f'drilldown.py:\n{debug_datafact(datafacts)}')
-        logger.info(f'drilldown.py:\n{values}')
+        values = collect_values(datafacts) # とはいえこっちも10秒ほどかかる
+        outliers = detect_outliers(values) # こっちに時間がかかるっぽい。外れ値検定の要素数が増える＝外れ値の計算を何周もやることになって、結果的に計算量が増える？？
+        # logger.info(f'drilldown.py:\n{debug_datafact(datafacts)}')
+        # logger.info(f'drilldown.py:\n{values}')
+        # logger.info(f'drilldown.py:\n{outliers}')
+        
+        # for k, v_d in outliers.items():
+
+    print('全部終わり')
     return 
 """
 ドリルダウンを実行する関数

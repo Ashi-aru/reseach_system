@@ -89,7 +89,7 @@ def debug_datafact(datafact):
         all_str += ("    "*tab_n + part + "\n")
         if(part in ["Datafact(","operation=["]):
             tab_n += 1
-    return all_str
+    return all_str[:-1]
 
 """
 operationをデバックする関数。
@@ -109,7 +109,7 @@ def debug_operation(operation):
         all_str += ("    "*tab_n + part + "\n")
         if(part in ["Datafact(","operation=["]):
             tab_n += 1
-    return all_str
+    return all_str[:-1]
 
 """
 if __name__ == "__main__":

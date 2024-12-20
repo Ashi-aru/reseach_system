@@ -221,9 +221,10 @@ def make_operations_for_datafacts(agg_attrs, agg_f_d, operator_d, subject, ordin
     def can_ScalarArithmetic(agg_attr, f_num, col_name):
         if((operator_d[(agg_attr, f_num)]==[None]) or (attr_type[col_name]!='Ordinal_t')):
             return False
-        # n = ordinal_d[col_name].index(filter_value[0])
-        # if(n==len(ordinal_d[col_name])-1): # NOTE: ordinal_dは降順を想定しているが、昇順の方が良いのか、、？？
-        #     return False
+        if(filter_value!=['*']):
+            n = ordinal_d[col_name].index(filter_value[0])
+            if(n==len(ordinal_d[col_name])-1): # NOTE: ordinal_dは降順を想定しているが、昇順の方が良いのか、、？？
+                return False
         return True
     
     """
