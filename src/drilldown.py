@@ -256,7 +256,61 @@ def cal_subtree_significance(s_node, tree_d, manager, ordinal_d, df_meta_info):
         else:
             raise ValueError(f'想定していないoperation_nameです:{operation_name}')
 
-
+    """
+    datafactsの*をvで置き換え、datafactを返す関数
+    """
+    def replace_star_with_key(datafacts, v):
+        parents, col_name, filter_values = datafacts.subject
+        operation_name, *operation_others = datafacts.operation
+        flg, key_attr = is_datafacts(datafacts.subject)
+        if(operation_name=="Aggregation"):
+            if(filter_values==['*']):
+                datafact = Datafact(
+                    subject=[parents, col_name, [v]],
+                    operation=datafacts.operation
+                )
+            elif(flg):
+                parents = copy.deepcopy(parents)
+                parents[key_attr]=v
+                datafact = Datafact(
+                    subject=[parents, col_name, filter_values],
+                    operation=datafacts.operation
+                )
+            else:
+                raise ValueError('datafactsではありません')
+        elif(operation_name=='ScalarArithmetic'):
+            if(filter_values==['*']):
+                op, datafact1, datafact2 = operation_others
+                n = ordinal_d[col_name].index(v)
+                subject1, subject2 = [parents, col_name, [v]], [parents, col_name, [ordinal_d[col_name][n+1]]]
+                datafact = Datafact(
+                    subject=[parents, col_name, [v]],
+                    operation=[
+                        op,
+                        Datafact(subject1, datafact1.operation),
+                        Datafact(subject2, datafact2.operation)
+                    ]
+                )
+            elif(flg):
+                parents = copy.deepcopy(parents)
+                parents[key_attr] = v
+                op, datafact1, datafact2 = operation_others
+                _, col_name1, filter_values1 = datafact1.subject
+                _, col_name2, filter_values2 = datafact2.subject
+                subject1, subject2 = [parents, col_name1, filter_values1], [parents, col_name2, filter_values2]
+                datafact = Datafact(
+                    subject=[parents, col_name, filter_values],
+                    operation=[
+                        op,
+                        Datafact(subject1, datafact1.operation),
+                        Datafact(subject2, datafact2.operation)
+                    ]
+                )
+            else:
+                raise ValueError('datafactsではありません')
+        else:
+            raise ValueError(f'想定していないoperation_nameです:{operation_name}')
+        return datafact
     
     print(f"\n{datetime.fromtimestamp(time.time())}::datafactsの列挙開始。")
     datafacts_l = list_datafacts(s_node)
@@ -267,7 +321,7 @@ def cal_subtree_significance(s_node, tree_d, manager, ordinal_d, df_meta_info):
     for datafacts in datafacts_l:
         values = collect_values(datafacts) # とはいえこっちも10秒ほどかかる
         outliers = detect_outliers(values) # こっちに時間がかかる。外れ値検定の要素数が増えると、外れ値の計算を何周もやることになる?
-        logger.info(f'drilldown.py:\n{debug_datafact(datafacts)}')
+        # logger.info(f'drilldown.py:\n{debug_datafact(datafacts)}')
         # logger.info(f'drilldown.py:\n{values}')
         # logger.info(f'drilldown.py:\n{outliers}')
         for k, v_d in outliers.items():
@@ -276,6 +330,7 @@ def cal_subtree_significance(s_node, tree_d, manager, ordinal_d, df_meta_info):
             manager.update_significances(datafact.subject, datafact.operation, 1-p)
     e = time.time()
     print(f"\n{datetime.fromtimestamp(time.time())}::重要性の計算を終了。\n計算時間={e-s}")
+    logger.info(f'drilldown.py:\n{manager.significances}')
     return 
 """
 ドリルダウンを実行する関数
@@ -284,5 +339,4 @@ def cal_subtree_significance(s_node, tree_d, manager, ordinal_d, df_meta_info):
 - 木構造のd
 - 属性のタイプ(Categoricalとか)情報のd
 - df
-
 """
