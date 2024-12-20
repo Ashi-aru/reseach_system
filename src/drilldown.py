@@ -77,7 +77,7 @@ def cal_subtree_nodes(s_node, tree_d, manager, ordinal_d, df_meta_info, df):
         operations = make_operations(agg_attrs, agg_f_d, operator_d, subject, ordinal_d, step_n, attr_type)
         for operation in operations:
             datafact = Datafact(subject=subject, operation=operation)
-            logger.info(f'drilldown.py:\n{debug_datafact(datafact)}')
+            # logger.info(f'drilldown.py:\n{debug_datafact(datafact)}')
             # print(debug_datafact(datafact))
             datafact.handle_datafact(manager, df, ordinal_d)
             # logger.info(f'drilldown.py:\n{manager.results}')
@@ -117,53 +117,77 @@ def cal_subtree_significance(s_node, tree_d, manager, ordinal_d, df_meta_info):
     agg_f_d = df_meta_info.aggregation_f_d
     operator_d = df_meta_info.operator_d
     attr_type = df_meta_info.attr_type_d
-    drilldown_path_l = df_meta_info.drilldown_path_l    
+    drilldown_path_l = df_meta_info.drilldown_path_l
+    df = df_meta_info.df    
     """
     datafactsの列挙を実施
     """
-    def list_datafacts(s_node, datafacts_l):
+    def list_datafacts(s_node):
         """
-        s_nodeが末端ノードではない時に、s_nodeの子達をdatafactsとしてまとめる
-        - subject=[{},"C",["*"]] 
-        - subject=[{"A":"a"},"C",["*"]] 
+        flg_d:[{A:a,B:*},C,[c]], [{B:*},C,[c]]を列挙するときに、ダブりをなくすためのflgを生成
+        - キーは(a,c) or ('_root',c)
+        - valueはTrue/False（まだ通過してなかったらTrue）
         """
+        def make_flg_d():
+            flg_d = {}
+            if(len(drilldown_path_l)>=2):
+                for v in df[drilldown_path_l[1]].unique():
+                    flg_d[('_root',v)] = True
+            if(len(drilldown_path_l)>=3):
+                for v1 in df[drilldown_path_l[0]].unique():
+                    for v2 in df[drilldown_path_l[2]].unique():
+                        flg_d[(v1,v2)] = True
+            return flg_d
 
-        # logger.info(f"drilldown.py:list_datafacts\ns_node={s_node}")
-        # logger.info(f"drilldown.py:list_datafacts\ntree_d[tuple(s_node)]={tree_d[tuple(s_node)]}")
+        def dfs(p_node, datafacts_l=[]):
+            """
+            p_nodeが末端ノードではない時に、p_nodeの子達をdatafactsとしてまとめる
+            - subject=[{},"C",["*"]] 
+            - subject=[{"A":"a"},"C",["*"]] 
+            """
+            if(tuple(p_node) in tree_d):
+                node_path = copy.deepcopy(p_node)
+                if(node_path==["_root"]):
+                    node_path = []
+                node_path.append('*')
+                subject = make_subject(node_path=node_path, drilldown_attr=drilldown_path_l)
+                operation_l = make_operations_for_datafacts(agg_attrs, agg_f_d, operator_d, subject, ordinal_d, attr_type)
+                for operation in operation_l:
+                    datafacts = Datafact(subject=subject, operation=operation)
+                    datafacts_l.append(datafacts)
+                # print(datafacts_l)
+            """
+            ルートから見て、p_nodeが孫以降のノードである時、以下をdatafactsとしてまとめる
+            - subject=[{"A":"a","B":"*"},"C",["c"]] 
+            - subject=[{"A":"*"},"B",["b"]] 
+            ↓ これは考えない。
+            - subject=[{"A":"*","B":"*"},"C",["c"]] 
+            """
+            if(len(p_node)>=2):
+                flg_key = (p_node[0],p_node[-1]) if(len(p_node)>2) else ('_root', p_node[-1])
+                if(flg_d[flg_key]):
+                    flg_d[flg_key] = False
+                    node_path = copy.deepcopy(p_node)
+                    node_path[-2] = "*"
+                    subject = make_subject(node_path=node_path, drilldown_attr=drilldown_path_l)
+                    operation_l = make_operations_for_datafacts(agg_attrs, agg_f_d, operator_d, subject, ordinal_d, attr_type)
+                    for operation in operation_l:
+                        datafacts = Datafact(subject=subject, operation=operation)
+                        datafacts_l.append(datafacts)
+            """
+            再帰的に上の処理を繰り返す
+            """
+            if(tuple(p_node) not in tree_d):
+                return datafacts_l
+            for c_node in tree_d[tuple(p_node)]:
+                datafacts_l = dfs(c_node, datafacts_l)
+            return datafacts_l
+        
+        flg_d = make_flg_d()
+        datafacts_l = dfs(p_node=s_node)
+        return datafacts_l
 
-        if(tuple(s_node) in tree_d):
-            node_path = copy.deepcopy(s_node)
-            if(node_path==["_root"]):
-                node_path = []
-            node_path.append('*')
-            subject = make_subject(node_path=node_path, drilldown_attr=drilldown_path_l)
-            operation_l = make_operations_for_datafacts(agg_attrs, agg_f_d, operator_d, subject, ordinal_d, attr_type)
-            for operation in operation_l:
-                datafacts = Datafact(subject=subject, operation=operation)
-                datafacts_l.append(datafacts)
-        """
-        ルートから見て、s_nodeが孫以降のノードである時、以下をdatafactsとしてまとめる
-        - subject=[{"A":"a","B":"*"},"C",["c"]] 
-        - subject=[{"A":"*"},"B",["b"]] 
-        ↓ これは考えない。
-        - subject=[{"A":"*","B":"*"},"C",["c"]] 
-        """
-        if(len(s_node)>=2):
-            node_path = copy.deepcopy(s_node)
-            node_path[-2] = "*"
-            subject = make_subject(node_path=node_path, drilldown_attr=drilldown_path_l)
-            operation_l = make_operations_for_datafacts(agg_attrs, agg_f_d, operator_d, subject, ordinal_d, attr_type)
-            for operation in operation_l:
-                datafacts = Datafact(subject=subject, operation=operation)
-                datafacts_l.append(datafacts)
-        """
-        再帰的に上の処理を繰り返す
-        """
-        if(tuple(s_node) not in tree_d): 
-            return
-        for c_node in tree_d[tuple(s_node)]:
-            list_datafacts(c_node, datafacts_l)
-    
+
     """
     datafactsに含まれるdatafactを集めてくる
     """
@@ -199,7 +223,6 @@ def cal_subtree_significance(s_node, tree_d, manager, ordinal_d, df_meta_info):
                 node_path = tuple([v for _, v in parents.items()])
                 for c_node in tree_d[node_path]: 
                     c_subject = make_subject(c_node, drilldown_path_l)
-                    logger.info(f'drilldown.py::filter_values==["*"]の方\n{c_subject}')
                     c_parents, c_col, c_filter_values = c_subject
                     n = ordinal_d[c_col].index(c_filter_values[0])
                     subject1, subject2 = c_subject, [c_parents,c_col,[ordinal_d[c_col][n+1]]]
@@ -233,15 +256,18 @@ def cal_subtree_significance(s_node, tree_d, manager, ordinal_d, df_meta_info):
         else:
             raise ValueError(f'想定していないoperation_nameです:{operation_name}')
 
-    datafacts_l = []
-    list_datafacts(s_node, datafacts_l)
-    print(f"\n{datetime.fromtimestamp(time.time())}::datafactsの列挙終了。\nlen(datafacts_l={len(datafacts_l)})")
+
+    
+    print(f"\n{datetime.fromtimestamp(time.time())}::datafactsの列挙開始。")
+    datafacts_l = list_datafacts(s_node)
+    print(f'len(datafacts_l)={len(datafacts_l)}')
+    print(f"{datetime.fromtimestamp(time.time())}::datafactsの列挙終了。")
     print(f"\n{datetime.fromtimestamp(time.time())}::重要性の計算を開始。")
     s = time.time()
     for datafacts in datafacts_l:
         values = collect_values(datafacts) # とはいえこっちも10秒ほどかかる
         outliers = detect_outliers(values) # こっちに時間がかかる。外れ値検定の要素数が増えると、外れ値の計算を何周もやることになる?
-        # logger.info(f'drilldown.py:\n{debug_datafact(datafacts)}')
+        logger.info(f'drilldown.py:\n{debug_datafact(datafacts)}')
         # logger.info(f'drilldown.py:\n{values}')
         # logger.info(f'drilldown.py:\n{outliers}')
         for k, v_d in outliers.items():
