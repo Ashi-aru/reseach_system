@@ -15,57 +15,30 @@ logger = setup_logger()
 """
 ドリルダウンする木を生成する関数
 入力:
-- ドリルダウンする属性のリスト
-- data frame
-- s_node: スタートするノードのパス（例:["_root"]←根を表す, ["静岡県",2022]）
+- p_node: スタートするノードのパス（例:["_root"]←根を表す, ["静岡県",2022]）
+- df_p: p_nodeの階層に沿って抽出されたdf
+- drilldown_attr: ドリルダウンする属性のリスト(例:["県","年","大分類"])
+- tree_d: 木構造を保存した辞書
 出力:
 - 木構造を保存した辞書。
     - キーはノードパスのタプル（例: (静岡県,2022)）
     - 値は子ノードのパス(例: [[静岡県,2022,製造業], [静岡県,2022,サービス業],..., [静岡県,2022,IT業]])
 """
-# TODO: 要リファクタリング（読みづらいし、何がしたいのか分かりづらい）
-def make_tree(drilldown_l, df, s_node=["_root"]):
-    """
-    attrsで親ノードのパスを受け取り、その子のパス群のリストを返す
-    入力:
-    - drilldown_l: ["県","年","大分類"]
-    - attrs: 親ノードのパス（例 ["静岡県",2021"]）
-    - df: 親ノードのdf(例 県==静岡 and 年==2021でfilterされたもの)
-    出力
-    - df_parent: parentの部分空間におけるdf
-    - リスト: parentの子ノードへのパスを格納したリスト
-        [
-            ["静岡県",2021","製造業"],
-            ["静岡県",2021","サービス業"],
-            ...
-            ["静岡県",2021","IT業"],
-        ]
-    """
-    def return_children(drilldown_l=drilldown_l, attrs=None, df_parent=None):
-        if(attrs==['_root']):
-            children_l = list(df_parent[drilldown_l[0]].unique())
-            return [[c] for c in children_l if(str(c)!="nan")]
-        if(len(drilldown_l)==len(attrs)):
-            return []
-        children_l = list(df_parent[drilldown_l[len(attrs)]].unique())
-        return [attrs + [c] for c in children_l if(str(c)!="nan")]
-
-    print(f"\n{datetime.fromtimestamp(time.time())}::ドリルダウンする木構造の作成を開始")
-    df_d = {tuple(s_node):df}
-    tree_d = {tuple(s_node):return_children(attrs=s_node,df_parent=df)}
-    all_nodes = copy.deepcopy(tree_d[tuple(s_node)])
-    while all_nodes:
-        c_node = all_nodes.pop()
-        key = tuple(c_node[:-1]) if(len(c_node)>1) else tuple(['_root'])
-        if(key not in df_d):
-            subject = make_subject(c_node, drilldown_l)
-            key2 = tuple(c_node[:-2])if(len(c_node)>2) else tuple(['_root'])
-            df_d[key] = filter_df_by_subject(subject=subject, df=df_d[key2])  # df_d[key] = filter_df_by_subject(subject=subject, df=df)
-        df_parent = df_d[key] 
-        children_l = return_children(attrs=c_node, df_parent=df_parent)
-        if(children_l != []):
-            tree_d[tuple(c_node)] = children_l
-            all_nodes += children_l
+def make_tree(p_node=['_root'], df_p=None, drilldown_attr=None, tree_d={}):
+    c_nodes_l = []
+    c_attr_name = drilldown_attr[len(p_node)] if(p_node!=["_root"]) else drilldown_attr[0]
+    children = df_p[c_attr_name].unique()
+    for child in children:
+        c_node = copy.deepcopy(p_node) + [child] if(p_node!=["_root"]) else [child]
+        c_nodes_l.append(c_node)
+        if(len(c_node)<len(drilldown_attr)): # 末端ノードではないとき
+            df_c = df_p[df_p[c_attr_name]==child]
+            if(df_c.empty):
+                continue
+            make_tree(c_node, df_c, drilldown_attr,tree_d)
+        else:
+            continue
+    tree_d[tuple(p_node)] = c_nodes_l
     return tree_d
 
 
@@ -104,7 +77,7 @@ def cal_subtree_nodes(s_node, tree_d, manager, ordinal_d, df_meta_info, df):
         operations = make_operations(agg_attrs, agg_f_d, operator_d, subject, ordinal_d, step_n, attr_type)
         for operation in operations:
             datafact = Datafact(subject=subject, operation=operation)
-            # logger.info(f'drilldown.py:\n{debug_datafact(datafact)}')
+            logger.info(f'drilldown.py:\n{debug_datafact(datafact)}')
             # print(debug_datafact(datafact))
             datafact.handle_datafact(manager, df, ordinal_d)
             # logger.info(f'drilldown.py:\n{manager.results}')
@@ -154,6 +127,10 @@ def cal_subtree_significance(s_node, tree_d, manager, ordinal_d, df_meta_info):
         - subject=[{},"C",["*"]] 
         - subject=[{"A":"a"},"C",["*"]] 
         """
+
+        # logger.info(f"drilldown.py:list_datafacts\ns_node={s_node}")
+        # logger.info(f"drilldown.py:list_datafacts\ntree_d[tuple(s_node)]={tree_d[tuple(s_node)]}")
+
         if(tuple(s_node) in tree_d):
             node_path = copy.deepcopy(s_node)
             if(node_path==["_root"]):
@@ -258,19 +235,21 @@ def cal_subtree_significance(s_node, tree_d, manager, ordinal_d, df_meta_info):
 
     datafacts_l = []
     list_datafacts(s_node, datafacts_l)
-    print(f"datafactsの列挙おわおわり。len(datafacts_l={len(datafacts_l)})")
-    n = 0
-
+    print(f"\n{datetime.fromtimestamp(time.time())}::datafactsの列挙終了。\nlen(datafacts_l={len(datafacts_l)})")
+    print(f"\n{datetime.fromtimestamp(time.time())}::重要性の計算を開始。")
+    s = time.time()
     for datafacts in datafacts_l:
         values = collect_values(datafacts) # とはいえこっちも10秒ほどかかる
-        outliers = detect_outliers(values) # こっちに時間がかかるっぽい。外れ値検定の要素数が増える＝外れ値の計算を何周もやることになって、結果的に計算量が増える？？
+        outliers = detect_outliers(values) # こっちに時間がかかる。外れ値検定の要素数が増えると、外れ値の計算を何周もやることになる?
         # logger.info(f'drilldown.py:\n{debug_datafact(datafacts)}')
         # logger.info(f'drilldown.py:\n{values}')
         # logger.info(f'drilldown.py:\n{outliers}')
-        
-        # for k, v_d in outliers.items():
-
-    print('全部終わり')
+        for k, v_d in outliers.items():
+            datafact = replace_star_with_key(datafacts, k)
+            p = v_d['p_value']
+            manager.update_significances(datafact.subject, datafact.operation, 1-p)
+    e = time.time()
+    print(f"\n{datetime.fromtimestamp(time.time())}::重要性の計算を終了。\n計算時間={e-s}")
     return 
 """
 ドリルダウンを実行する関数

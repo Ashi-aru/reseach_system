@@ -46,6 +46,9 @@ class DataFrameMetaInfo:
             analysis_goal=self.analysis_goal, 
             attribute_type=self.attr_type_d
         )
+        for drilldown_attr in self.drilldown_path_l:
+            n = len(self.df[drilldown_attr].unique())
+            print(f'{drilldown_attr}の要素数: {n}')
         print(f"\n{datetime.fromtimestamp(time.time())}::Aggregation関数の選択を開始")
         self.aggregation_f_d = define_aggregation_F(
             att_l = self.focus_attr_l, 

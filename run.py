@@ -23,7 +23,7 @@ if(__name__ == '__main__'):
     df = pd.read_csv(DATA_DIR/f'tables/{table}')
     sample_df = df.head(2)
     df_description = "2018年から2022年にかけての米国の5027人のAmazon.comユーザーの購入履歴。データセットのサイズは300MB超。"
-    analysis_goal = "[y,Shipping Adress State, Category]のドリルダウンによる分析"
+    analysis_goal = "['Shipping Adress State', 'y', 'Category']の順でドリルダウンすることによる分析"
     focus_attr_l = ["Purchase Price Per Unit","Quantity"]
     ordinal_d = {"y":[2024, 2023, 2022, 2021, 2020, 2019, 2018]}
     s_node = ["_root"] # root以外の時は、ノードへのパス（例:["製造業","静岡県",2022]）となる。
@@ -46,14 +46,16 @@ if(__name__ == '__main__'):
     drilldown_path = ["Category","Shipping Address State"]→make_tree計算時間60sec以上
     drilldown_path = ["Shipping Address State","Category"]→make_tree計算時間1sec以下
     """
-    tree_d = make_tree(drilldown_l=df_meta_info.drilldown_path_l, df=df_meta_info.df)
+    print(f"\n{datetime.fromtimestamp(time.time())}::木構造の計算を開始")
+    tree_d = make_tree(drilldown_attr=df_meta_info.drilldown_path_l, df_p=df_meta_info.df)
+    print(f'{datetime.fromtimestamp(time.time())}::len(tree_d)={len(tree_d)}')
+    print(f"{datetime.fromtimestamp(time.time())}::木構造の計算を終了")
     s = time.time()
     print(f"\n{datetime.fromtimestamp(time.time())}::各ノードの計算を開始")
     cal_subtree_nodes(s_node, tree_d, manager, ordinal_d, df_meta_info, df_meta_info.df)
     e = time.time()
-    print(f"\n{datetime.fromtimestamp(time.time())}::各ノードの計算を終了。\n計算時間 = {e-s}s")
-    cal_subtree_significance(s_node, tree_d, manager, ordinal_d, df_meta_info)
-
+    print(f"{datetime.fromtimestamp(time.time())}::各ノードの計算を終了。\n計算時間 = {e-s}s")
+    # cal_subtree_significance(s_node, tree_d, manager, ordinal_d, df_meta_info)
     # result1 = manager.search_result(
     #     subject = [{'y':2022},'Shipping Address State',['*']],
     #     operation = ["Aggregation", "Purchase Price Per Unit", "mean"]
