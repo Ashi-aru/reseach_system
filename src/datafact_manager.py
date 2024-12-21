@@ -41,6 +41,9 @@ class DatafactManager:
         else:
             subject_key = (tuple([(k,v) for k,v in subject[0].items()]), subject[1], (subject[2][0],))
 
+        if(operation is None):
+            return subject_key
+
         operation_name, *operation_others = operation
         # logger.info(operation_others)
 

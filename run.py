@@ -9,7 +9,7 @@ from logging_config import setup_logger
 from dataframe_metainfo import DataFrameMetaInfo
 from datafact_manager import DatafactManager
 from datafact_model import Datafact
-from drilldown import cal_subtree_nodes, make_tree, cal_subtree_significance
+from drilldown import cal_subtree_nodes, make_tree, cal_subtree_significance, drilldown
 
 
 PROJ_DIR = Path(__file__).resolve().parent
@@ -56,6 +56,8 @@ if(__name__ == '__main__'):
     e = time.time()
     print(f"{datetime.fromtimestamp(time.time())}::各ノードの計算を終了。\n計算時間 = {e-s}s")
     cal_subtree_significance(s_node, tree_d, manager, ordinal_d, df_meta_info)
+    datafact_l_to_verbalize = drilldown(s_node, tree_d, manager, ordinal_d, df_meta_info)
+
     # result1 = manager.search_result(
     #     subject = [{'y':2022},'Shipping Address State',['*']],
     #     operation = ["Aggregation", "Purchase Price Per Unit", "mean"]

@@ -102,3 +102,26 @@ def is_datafacts(subject):
             if(v=="*"):
                 key_attr = k
     return [is_datafacts, key_attr]
+
+"""
+datafact.operationと被Agg属性、Agg_fが与えられた時に、datafact.operationが「被Agg属性関連かつAgg_f関連」のoperationなのかを判定
+【入力】
+- datafact.operation: datafactのoperation
+- agg_attr: 被Agg属性(売上, 従業員数, ..)
+- Agg_f: 被AggをAggregaionする関数（sum, mean, ..）
+【出力】
+- True/False
+"""
+def is_agg_attr_operation(operation, agg_attr, agg_f):
+    operation_name, *operation_others = operation
+    if(operation_name=="Aggregation"):
+        culumn_name, f_name = operation_others
+        return (culumn_name==agg_attr) and (f_name==agg_f)
+    elif(operation_name=="ScalarArithmetic"):
+        operator, datafact1, datafact2 = operation_others
+        return is_agg_attr_operation(datafact1.operation, agg_attr, agg_f) or is_agg_attr_operation(datafact2.operation, agg_attr, agg_f)
+    elif(operation_name=="Rank"):
+        order, datafacts = operation_others
+        return is_agg_attr_operation(datafacts.operation, agg_attr, agg_f)
+    else:
+        raise ValueError('存在しないOperationです')
