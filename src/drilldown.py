@@ -434,8 +434,7 @@ def drilldown(s_node, tree_d, manager, ordinal_d, df_meta_info):
             textdatafact_l = bfs(s_node, agg_attr, agg_f, textdatafact_l)
     print(f'drilldown.py::drilldown\n言語化するデータファクト数={len(textdatafact_l)}')
     print(f"{datetime.fromtimestamp(time.time())}::drilldown終了。")
-    for datafact in textdatafact_l:
-        logger.info(f'drilldown.py:\n{debug_datafact(datafact)}')
+    return textdatafact_l
 
 
 

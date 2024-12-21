@@ -2,6 +2,8 @@ from dotenv import load_dotenv
 import os
 from openai import OpenAI
 from datetime import date
+import time
+from datetime import datetime
 import json
 from pathlib import Path
 import re
@@ -45,9 +47,12 @@ def make_prompt(base_prompt, table_description=None, datafact_num=None, td_flg=F
 出力: None(各datafactに言及するテンプレートをDatafactManager.templatesに保存)
 """
 def make_templates(datafact_l, manager, ordinal_d, table_description):
-    start, end, step_n = 0, 0, 10
+    s = time.time()
+    print(f"\n{datetime.fromtimestamp(time.time())}::テンプレートの生成を開始")
+    start, end, step_n = 0, 0, 20
     base_prompt = make_prompt(BASE_PROMPT, table_description=table_description, td_flg=True)
     while end < len(datafact_l):
+        print(f'make_templates.py\nstart={start}, end={end}')
         flows_d = {}
         # テンプレート生成をstep_n個のdatafactごとに実施（APIに送信）
         end = start+step_n if(start+step_n<=len(datafact_l)) else len(datafact_l)
@@ -71,4 +76,6 @@ def make_templates(datafact_l, manager, ordinal_d, table_description):
             datafact, template = datafact_l[start+i], v["template"]
             manager.update_templates(datafact.subject, datafact.operation, template)
         start = end
+    e = time.time()
+    print(f"{datetime.fromtimestamp(time.time())}::テンプレートの生成を終了\n計算時間 = {e-s}")
     return None

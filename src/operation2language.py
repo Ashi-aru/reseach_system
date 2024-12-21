@@ -83,12 +83,12 @@ def Intersection(request):
 # 出力例：'「業種がIT,食品のいずれかである」'
 def ItemFiltering(request):
     if(request[0]=='in'):
-        if(isinstance(request[2], str)):
-            return f'「{request[1][1]}が{request[2]}で計算したもののいずれかである」'
-        else:
-            categories = ','.join(request[2])
+        if(isinstance(request[2], list)):
+            categories = ','.join([str(x) for x in request[2]])
             text = 'のいずれかである」' if(len(request[2])>1) else 'である」'
             return f'「{request[1][1]}が'+categories+text
+        else:
+            return f'「{request[1][1]}が{request[2]}で計算したもののいずれかである」'
 
     if(request[0]=='<'):
         range_s = request[2] # '(2020,2024]', '[-inf,2024]'の部分を取得
@@ -201,6 +201,7 @@ subjectからItemFiltering用のリクエスト（問い合わせ）を生成す
 出力: ItemFilteringのリクエスト
 """
 def generate_IF_request(subject):
+    # print(f'operaion2language.py:generate_IF_request\nsubject={subject}')
     parents, col_name, filter_values = subject
     requests_l = [["in", ["Attribute",k], [v]] for k, v in parents.items() if(v not in ["*","n","n-1"])]
     request = [] if(len(requests_l)==0) else requests_l[0] 

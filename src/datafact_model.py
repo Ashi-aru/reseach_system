@@ -210,11 +210,17 @@ class Datafact:
             if(operation_name == "Aggregation"):
                 aggregation_col, f_name = operation_others
                 if(is_datafacts):
-                    flow_d[numbering(n,1)]="data1から"+ItemFiltering(generate_IF_request(self.subject))+"という条件に合致するものを抽出"
+                    if(parents=={}):
+                        flow_d[numbering(n,1)]="data1を取り出す"
+                    else:
+                        flow_d[numbering(n,1)]="data1から"+ItemFiltering(generate_IF_request(self.subject))+"という条件に合致するものを抽出"
                     flow_d[numbering(n,2)]=GroupingOperation([f_name,[col_name],[aggregation_col]])
                 else:
-                    flow_d[numbering(n,1)]="data1から"+ItemFiltering(generate_IF_request(self.subject))+"という条件に合致するものを抽出"
-                    t = ",".join(filter_values)
+                    if(self.subject==[{},"",[]]):
+                        flow_d[numbering(n,1)]="data1を取り出す"
+                    else:
+                        flow_d[numbering(n,1)]="data1から"+ItemFiltering(generate_IF_request(self.subject))+"という条件に合致するものを抽出"
+                    t = ",".join([str(x) for x in filter_values])
                     text = f"{col_name}属性全体に占める「{t}」の" if(f_name in ["sum_percent","count_percent"]) else ""
                     flow_d[numbering(n,2)]=text+Aggregation([aggregation_col, f_name])
                 return flow_d
@@ -247,5 +253,5 @@ class Datafact:
             else:
                 raise ValueError("登録されていないOperation名です！")
         flow_d = datafact2flow_d()
-        logger.info(json.dumps(flow_d,ensure_ascii=False,indent=4))
+        # logger.info(json.dumps(flow_d,ensure_ascii=False,indent=4))
         return flow_d
