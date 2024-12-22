@@ -112,16 +112,16 @@ datafact.operationと被Agg属性、Agg_fが与えられた時に、datafact.ope
 【出力】
 - True/False
 """
-def is_agg_attr_operation(operation, agg_attr, agg_f):
+def is_aggattr_and_aggf_operation(operation, agg_attr, agg_f):
     operation_name, *operation_others = operation
     if(operation_name=="Aggregation"):
         culumn_name, f_name = operation_others
         return (culumn_name==agg_attr) and (f_name==agg_f)
     elif(operation_name=="ScalarArithmetic"):
         operator, datafact1, datafact2 = operation_others
-        return is_agg_attr_operation(datafact1.operation, agg_attr, agg_f) or is_agg_attr_operation(datafact2.operation, agg_attr, agg_f)
+        return is_aggattr_and_aggf_operation(datafact1.operation, agg_attr, agg_f) or is_aggattr_and_aggf_operation(datafact2.operation, agg_attr, agg_f)
     elif(operation_name=="Rank"):
         order, datafacts = operation_others
-        return is_agg_attr_operation(datafacts.operation, agg_attr, agg_f)
+        return is_aggattr_and_aggf_operation(datafacts.operation, agg_attr, agg_f)
     else:
         raise ValueError('存在しないOperationです')

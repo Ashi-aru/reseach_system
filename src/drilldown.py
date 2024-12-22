@@ -1,15 +1,13 @@
 import time
 from datetime import datetime
 from collections import deque
-import copy
 # 自分で作った関数の読み込み
-from others import filter_df_by_subject, is_datafacts, is_agg_attr_operation
+from others import is_aggattr_and_aggf_operation
 from logging_config import setup_logger
-from make_operation import make_operations, make_operations_for_datafacts
+from make_operation import make_operations
 from make_subject import make_subject
 from datafact_model import Datafact
 from debug import debug_datafact
-from cal_significance import detect_outliers
 
 logger = setup_logger()
 F_NUM2F_NAME_D = {
@@ -25,12 +23,6 @@ F_NUM2F_NAME_D = {
     10:"nunique",
     11:"unique"
     }
-
-
-
-
-
-
 
 
 """
@@ -95,7 +87,7 @@ def drilldown(s_node, manager, ordinal_d, df_meta_info):
             subject = make_subject(node_path=node, drilldown_attr=drilldown_path_l)
             for i in range(1,4):
                 for operation in make_operations(agg_attrs, agg_f_d, operator_d, subject, ordinal_d, i, attr_type):
-                    if(not is_agg_attr_operation(operation, agg_attr, agg_f)): # operationがagg_attr関連でない時
+                    if(not is_aggattr_and_aggf_operation(operation, agg_attr, agg_f)): # operationがagg_attr関連かつagg_f関連でない時
                         continue
                     datafact = Datafact(subject=subject, operation=operation)
                     textdatafact_l.append(datafact)
@@ -106,11 +98,11 @@ def drilldown(s_node, manager, ordinal_d, df_meta_info):
                 continue
             children_p_value_d = sort_children_by_total_p_value(node)
             c_node_num = dd_nodes_num_l[len(node)] if(node!=['_root']) else dd_nodes_num_l[0]
-            for i in range(c_node_num):
+            for _ in range(c_node_num):
                 if(len(children_p_value_d)==0):
                     break
-                c_node, _ = children_p_value_d.popitem()
-                print(f'drilldown.py::bfs\n{c_node},{_}')
+                c_node, total_p = children_p_value_d.popitem()
+                print(f'drilldown.py::bfs\n{c_node},{total_p}')
                 queue.append(c_node)
         return textdatafact_l
 

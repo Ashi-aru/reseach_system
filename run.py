@@ -8,11 +8,9 @@ sys.path.append('/Users/ashikawaharuki/Desktop/research/TDB/test/system/src')
 from logging_config import setup_logger
 from dataframe_metainfo import DataFrameMetaInfo
 from datafact_manager import DatafactManager
-from datafact_model import Datafact
 from drilldown import drilldown
 from cal_significance import cal_subtree_significance
 from cal_datafact import cal_subtree_nodes
-from make_templates import make_templates
 
 
 PROJ_DIR = Path(__file__).resolve().parent
@@ -50,11 +48,9 @@ if(__name__ == '__main__'):
     drilldown_path = ["Shipping Address State","Category"]→make_tree計算時間1sec以下
     """
     
-    s = time.time()
-    print(f"\n{datetime.fromtimestamp(time.time())}::各ノードの計算を開始")
+    
     cal_subtree_nodes(s_node, manager, ordinal_d, df_meta_info)
-    e = time.time()
-    print(f"{datetime.fromtimestamp(time.time())}::各ノードの計算を終了。\n計算時間 = {e-s}s")
+    
     cal_subtree_significance(s_node, manager, ordinal_d, df_meta_info)
     datafact_l_to_verbalize = drilldown(s_node, manager, ordinal_d, df_meta_info)
     # make_templates(datafact_l_to_verbalize, manager, ordinal_d, df_description)

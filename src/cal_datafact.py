@@ -62,7 +62,11 @@ def cal_subtree_nodes(s_node, manager, ordinal_d, df_meta_info):
         for c_node in tree_d[tuple(node)]:
             dfs(c_node, df_parent, step_n)
 
+    s = time.time()
+    print(f"\n{datetime.fromtimestamp(time.time())}::各ノードの計算を開始")
     for step_n in range(1,4):
         print(f'step_{step_n}')
         logger.info(f'\n====================================step_{step_n}===============================\n')
         dfs(node=s_node,df=df,step_n=step_n)
+    e = time.time()
+    print(f"{datetime.fromtimestamp(time.time())}::各ノードの計算を終了。\n計算時間 = {e-s}s")
