@@ -9,3 +9,4 @@ pypdf
 pytest
 python-dotenv
 scipy
+jinja2

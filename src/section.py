@@ -1,0 +1,125 @@
+from dotenv import load_dotenv
+import os
+from openai import OpenAI
+import json
+from pathlib import Path
+import time
+from datetime import datetime, date
+from collections import deque
+from jinja2 import Template
+import copy
+# 自分で作った関数の読み込み
+from logging_config import setup_logger
+from debug import debug_datafact
+from drilldown import drilldown
+from make_templates import make_templates
+from datafact_model import Datafact
+from make_subject import make_subject
+from make_operation import make_operations
+from others import is_agg_attr_operation, to_dict_recursive
+logger = setup_logger()
+
+
+PROJ_DIR = Path(__file__).resolve().parent.parent
+DATA_DIR = PROJ_DIR/"data"
+PROMPT_DIR = DATA_DIR/"prompt"
+
+TODAY = date.today().strftime("%Y-%m-%d")
+
+# ロガーの設定
+logger = setup_logger()
+
+load_dotenv()
+API_KEY = os.getenv("OPENAI_API_KEY")
+with open(DATA_DIR/"prompt/sentences2section.txt", "r") as f:  
+    BASE_PROMPT = f.read()
+MODEL = "o1-mini"
+
+
+"""
+(被Agg属性,Aggregation_f)の組み合わせごとに生成するSeciton(節)を定義するクラス
+【インスタンス】
+- attr_and_f_tuple: この節で扱う(被Agg属性,Aggregation_f)の組み合わせ（タプル）
+- sentences: 生成した文章を格納する辞書。
+    - キーは0,1,2,..(何文目か)
+    - 値は文章
+- based_datafact: 各文の元になったdatafactを格納する辞書
+    - キーは0,1,2,..(何文目か)
+    - 値は元となったdatafactのインデックス
+- based_datafact_l: 本節で使用するdatafactを格納するリスト
+【メソッド】
+- make_section: 本節での文章生成を行うメソッド
+    - drilldown: 指定したdatafact.subjectから1-p値を元にドリルダウンしてdatafactを列挙
+    - make_templates: 列挙したdatafactをテンプレート化
+    - render_sentence: テンプレート化したdatafactに値をレンダリング
+    - make_section_sentences: 各文からレポートを生成
+    - レポートからデータが足りないdatafact.subjectを列挙
+"""
+class Section:
+    def __init__(self, attr_and_f_tuple):
+        self.attr_and_f_tuple = attr_and_f_tuple
+        self.sentences = {}
+        self.based_datafact = {}
+        self.based_datafact_l = []
+
+    
+    def make_section(self, datafact_l, manager, ordinal_d, df_meta_info):
+        self.based_datafact_l = datafact_l
+        table_description = df_meta_info.df_description
+        """
+        テンプレート化したdatafactに値をレンダリングする関数
+        """
+        def render_sentence(datafact):
+            template = Template(manager.search_template(datafact.subject, datafact.operation))
+            value = manager.search_result(datafact.subject, datafact.operation)
+            return template.render(value=value)
+        """
+        各文からsectionの文章を生成する関数
+        【入力】
+        - sentences_l: 各文が格納されたリスト（インデックスがbased_datafact_lのインデックスに一致）
+        【出力】
+        - section: OpenAi APIの出力のcontent部分
+        - message: OpenAi APIに入力した部分
+        """
+        def make_section_sentences(sentences_l, df_meata_info, model):
+            drilldown_path = "=>".join(df_meata_info.drilldown_path_l)
+            sentences_d = dict([(i,s)for i, s in enumerate(sentences_l)])
+            data = {
+                "drilldown_path":drilldown_path,
+                "agg_attr":self.attr_and_f_tuple[0],
+                "agg_f":self.attr_and_f_tuple[1]
+            }
+            client = OpenAI(api_key=API_KEY)
+            prompt = Template(BASE_PROMPT).render(data)
+            messages = [
+                    {"role": "user", "content": prompt},
+                    {"role": "user", "content": "入力:\n"+json.dumps(sentences_d,ensure_ascii=False,indent=4)+"\n\n出力:\n"},
+                    ]
+            response = client.chat.completions.create(model=model, messages=messages)
+            content = json.loads(response.choices[0].message.content)
+            response = to_dict_recursive(response)
+            return [content, messages]
+        
+        for x in datafact_l:
+            print(x)
+        make_templates(datafact_l, manager, ordinal_d, table_description, model="o1-mini")
+        sentences_l = [render_sentence(datafact) for datafact in datafact_l]
+        content, messages = make_section_sentences(sentences_l, df_meta_info, model='gpt-4o')
+        ambiguous_datafact = [datafact_l[i] for i in content["ambiguous_datafact"]]
+
+        make_templates(ambiguous_datafact, manager, ordinal_d, table_description, model="o1-preview")
+        sentences_l = [render_sentence(datafact) for datafact in datafact_l]
+        content, messages = make_section_sentences(sentences_l, df_meta_info, model='gpt-4o')
+
+        for k, v in content['sentences'].items():
+            self.sentences[k] = v['sentence']
+            self.based_datafact[k] = v['based_datafact']
+            logger.info(f"Section.make_section\n{v['sentence']}")
+            for n in v['based_datafact']:
+                logger.info(f"{debug_datafact(datafact_l[n])}")
+        return None
+
+
+
+
+        

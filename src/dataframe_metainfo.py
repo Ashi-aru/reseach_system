@@ -7,6 +7,7 @@ from determine_attribute_type import determine_attribute_type
 from define_drilldown_path import define_drilldown_path
 from make_operation import define_aggregation_F, define_scalar_arithmetic_operator
 from logging_config import setup_logger
+from make_tree import make_tree
 
 
 PROJ_DIR = Path(__file__).resolve().parent.parent
@@ -49,6 +50,11 @@ class DataFrameMetaInfo:
         for drilldown_attr in self.drilldown_path_l:
             n = len(self.df[drilldown_attr].unique())
             print(f'{drilldown_attr}の要素数: {n}')
+        # NOTE: tree_dはdrilldown_path_l[0]の属性が、ユニークな値を多く持つと計算時間がべらぼうにかかかる
+        print(f"\n{datetime.fromtimestamp(time.time())}::木構造の生成を開始")
+        self.tree_d = make_tree(p_node=['_root'], df_p=self.df, drilldown_attr=self.drilldown_path_l, tree_d={})
+        print(f'{datetime.fromtimestamp(time.time())}::len(tree_d)={len(self.tree_d)}')
+        print(f"{datetime.fromtimestamp(time.time())}::木構造の計算を終了")
         print(f"\n{datetime.fromtimestamp(time.time())}::Aggregation関数の選択を開始")
         self.aggregation_f_d = define_aggregation_F(
             att_l = self.focus_attr_l, 

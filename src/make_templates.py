@@ -46,7 +46,7 @@ def make_prompt(base_prompt, table_description=None, datafact_num=None, td_flg=F
 入力: datafactのリスト
 出力: None(各datafactに言及するテンプレートをDatafactManager.templatesに保存)
 """
-def make_templates(datafact_l, manager, ordinal_d, table_description):
+def make_templates(datafact_l, manager, ordinal_d, table_description, model="o1-mini"):
     s = time.time()
     print(f"\n{datetime.fromtimestamp(time.time())}::テンプレートの生成を開始")
     start, end, step_n = 0, 0, 20
@@ -66,7 +66,7 @@ def make_templates(datafact_l, manager, ordinal_d, table_description):
                 {"role": "user", "content": prompt},
                 {"role": "user", "content": "Input:\n"+json.dumps(flows_d,ensure_ascii=False,indent=4)+"\n\nOutput:\n"},
                 ]
-        response = client.chat.completions.create(model=MODEL, messages=messages)
+        response = client.chat.completions.create(model=model, messages=messages)
         content = json.loads(response.choices[0].message.content)
         response = to_dict_recursive(response)
         logger.info(f"make_templates.py\n{json.dumps(content,ensure_ascii=False,indent=4)}")
