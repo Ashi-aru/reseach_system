@@ -7,7 +7,7 @@ from logging_config import setup_logger
 from make_operation import make_operations
 from make_subject import make_subject
 from datafact_model import Datafact
-from debug import debug_datafact
+from debug import debug_datafact, debug_operation
 
 logger = setup_logger()
 F_NUM2F_NAME_D = {
@@ -39,7 +39,7 @@ F_NUM2F_NAME_D = {
 【出力】
 - datafact_l:言語化するデータファクトを格納したリスト
 """
-def drilldown(s_node, manager, ordinal_d, df_meta_info):
+def drilldown(s_node, manager, ordinal_d, df_meta_info, agg_attr, agg_f):
     agg_attrs = df_meta_info.focus_attr_l
     agg_f_d = df_meta_info.aggregation_f_d
     operator_d = df_meta_info.operator_d
@@ -65,7 +65,6 @@ def drilldown(s_node, manager, ordinal_d, df_meta_info):
             c_p_value_d[tuple(c_node)] = sum(manager.significances[c_subject_key].values())
         c_p_value_d = dict(sorted(c_p_value_d.items(), key=lambda x:x[1]))
         return c_p_value_d
-    
 
     """
     s_nodeから始まる部分木に対して、agg_attr関連の1-p値で幅優先探索を実行する関数
@@ -102,16 +101,17 @@ def drilldown(s_node, manager, ordinal_d, df_meta_info):
                 if(len(children_p_value_d)==0):
                     break
                 c_node, total_p = children_p_value_d.popitem()
-                print(f'drilldown.py::bfs\n{c_node},{total_p}')
+                # print(f'drilldown.py::bfs\n{c_node},{total_p}')
                 queue.append(c_node)
         return textdatafact_l
 
     print(f"\n{datetime.fromtimestamp(time.time())}::drilldown開始。")
     textdatafact_l = []
-    for agg_attr in agg_attrs:
-        for f_num in agg_f_d[agg_attr]:
-            agg_f = F_NUM2F_NAME_D[f_num]
-            textdatafact_l = bfs(s_node, agg_attr, agg_f, textdatafact_l)
+    # for agg_attr in agg_attrs:
+    #     for f_num in agg_f_d[agg_attr]:
+    #         agg_f = F_NUM2F_NAME_D[f_num]
+    #         textdatafact_l = bfs(s_node, agg_attr, agg_f, textdatafact_l)
+    textdatafact_l = bfs(s_node, agg_attr, agg_f, textdatafact_l)
     print(f'drilldown.py::drilldown\n言語化するデータファクト数={len(textdatafact_l)}')
     print(f"{datetime.fromtimestamp(time.time())}::drilldown終了。")
     return textdatafact_l

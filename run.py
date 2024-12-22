@@ -11,12 +11,28 @@ from datafact_manager import DatafactManager
 from drilldown import drilldown
 from cal_significance import cal_subtree_significance
 from cal_datafact import cal_subtree_nodes
+from section import Section
 
 
 PROJ_DIR = Path(__file__).resolve().parent
 DATA_DIR = PROJ_DIR/"data"
 
 logger = setup_logger()
+
+
+F_NUM2F_NAME_D = {
+    1:"sum",
+    2:"sum_percent",
+    3:"mean",
+    4:"mean_percent",
+    5:"max",
+    6:"min",
+    7:"meadian",
+    8:"count",
+    9:"count_percent",
+    10:"nunique",
+    11:"unique"
+    }
 
 if(__name__ == '__main__'):
     # NOTE: ここはユーザーからの入力を受け取る形にする
@@ -52,31 +68,13 @@ if(__name__ == '__main__'):
     cal_subtree_nodes(s_node, manager, ordinal_d, df_meta_info)
     
     cal_subtree_significance(s_node, manager, ordinal_d, df_meta_info)
-    datafact_l_to_verbalize = drilldown(s_node, manager, ordinal_d, df_meta_info)
-    # make_templates(datafact_l_to_verbalize, manager, ordinal_d, df_description)
+    for agg_attr in focus_attr_l:
+        for f_num in df_meta_info.aggregation_f_d[agg_attr]:
+            agg_f = F_NUM2F_NAME_D[f_num]
+            datafact_l_to_verbalize = drilldown(s_node,manager,ordinal_d,df_meta_info,agg_attr,agg_f)
+            section = Section((agg_attr,agg_f))
+            section.make_section(datafact_l_to_verbalize,manager,ordinal_d,df_meta_info)
 
-    # result1 = manager.search_result(
-    #     subject = [{'y':2022},'Shipping Address State',['*']],
-    #     operation = ["Aggregation", "Purchase Price Per Unit", "mean"]
-    # )
-    # result2 = manager.search_result(
-    #     subject = [{'y':2022},'Shipping Address State',['MA']],
-    #     operation = ["Aggregation", "Purchase Price Per Unit", "mean"]
-    # )
-    # result3 = manager.search_result(
-    #     subject = [{'y':2022},'Shipping Address State',['MA']],
-    #     operation = [
-    #         'Rank', 
-    #         '降順',
-    #         Datafact(
-    #             subject=[{'y':2022},'Shipping Address State',['*']],
-    #             operation=["Aggregation", "Purchase Price Per Unit", "mean"]
-    #         )
-    #     ]
-    # )
-    # # logger.info(result1)
-    # # logger.info(result2)
-    # # logger.info(result3)
+    # datafact_l_to_verbalize = drilldown(s_node, manager, ordinal_d, df_meta_info)
 
-    # logger.info(f'run.py:\n{manager.results}')
 

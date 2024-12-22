@@ -298,9 +298,9 @@ def cal_subtree_significance(s_node, manager, ordinal_d, df_meta_info):
     for datafacts in datafacts_l:
         values = collect_values(datafacts) # とはいえこっちも10秒ほどかかる
         outliers = detect_outliers(values) # こっちに時間がかかる。外れ値検定の要素数が増えると、外れ値の計算を何周もやることになる?
-        logger.info(f'drilldown.py:\n{debug_datafact(datafacts)}')
+        # logger.info(f'drilldown.py:\n{debug_datafact(datafacts)}')
         # logger.info(f'drilldown.py:\n{values}')
-        logger.info(f'drilldown.py:\n{outliers}')
+        # logger.info(f'drilldown.py:\n{outliers}')
         for k, v_d in outliers.items():
             datafact = replace_star_with_key(datafacts, k)
             p = v_d['p_value']
