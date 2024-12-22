@@ -7,6 +7,7 @@ from determine_attribute_type import determine_attribute_type
 from define_drilldown_path import define_drilldown_path
 from make_operation import define_aggregation_F, define_scalar_arithmetic_operator
 from logging_config import setup_logger
+from make_tree import make_tree
 
 
 PROJ_DIR = Path(__file__).resolve().parent.parent
@@ -38,6 +39,7 @@ class DataFrameMetaInfo:
 
         print(f"\n{datetime.fromtimestamp(time.time())}::各属性タイプの判定を開始")
         self.attr_type_d = determine_attribute_type(sample_df=sample_df)
+
         print(f"\n{datetime.fromtimestamp(time.time())}::ドリルダウンの定義を開始")
         self.drilldown_path_l = define_drilldown_path(
             main_df=self.df, 
@@ -49,11 +51,18 @@ class DataFrameMetaInfo:
         for drilldown_attr in self.drilldown_path_l:
             n = len(self.df[drilldown_attr].unique())
             print(f'{drilldown_attr}の要素数: {n}')
+
+        print(f"\n{datetime.fromtimestamp(time.time())}::木構造の計算を開始")
+        self.tree_d = make_tree(drilldown_attr=self.drilldown_path_l, df_p=self.df)
+        print(f'{datetime.fromtimestamp(time.time())}::len(tree_d)={len(self.tree_d)}')
+        print(f"{datetime.fromtimestamp(time.time())}::木構造の計算を終了")
+
         print(f"\n{datetime.fromtimestamp(time.time())}::Aggregation関数の選択を開始")
         self.aggregation_f_d = define_aggregation_F(
             att_l = self.focus_attr_l, 
             att_label_d = self.attr_type_d
         )
+
         print(f"\n{datetime.fromtimestamp(time.time())}::ScalarArithmeticの演算子選択を開始")
         self.operator_d = define_scalar_arithmetic_operator(
             focus_att_l = self.focus_attr_l, 
