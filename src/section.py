@@ -12,7 +12,6 @@ from debug import debug_datafact
 from make_templates import make_templates
 from others import to_dict_recursive
 from make_datafact import datafact2datafacts
-logger = setup_logger()
 
 
 PROJ_DIR = Path(__file__).resolve().parent.parent
@@ -38,9 +37,12 @@ MODEL = "o1-mini"
 - sentences: 生成した文章を格納する辞書。
     - キーは0,1,2,..(何文目か)
     - 値は文章
-- based_datafact: 各文の元になったdatafactを格納する辞書
+- sentenceNum_to_datafactIndex_d: 各文の元になったdatafactを格納する辞書
     - キーは0,1,2,..(何文目か)
     - 値は元となったdatafactのインデックス
+- sentenceNum_to_datafactsResult_d: 各文の元になったdatafactについて、それが含まれるdatafactsデータたちを格納する辞書
+    - キーは0,1,2..(何文目か)
+    - 値は元となったdatafactが含まれるdatafactsデータ群を格納したリスト
 - based_datafact_l: 本節で使用するdatafactを格納するリスト
 【メソッド】
 - make_section: 本節での文章生成を行うメソッド
@@ -53,8 +55,9 @@ MODEL = "o1-mini"
 class Section:
     def __init__(self, attr_and_f_tuple):
         self.attr_and_f_tuple = attr_and_f_tuple
-        self.sentences = {}
-        self.based_datafact = {}
+        self.sentenceNum_to_sentence_d = {}
+        self.sentenceNum_to_datafactIndex_d = {}
+        self.sentenceNum_to_datafactsResult_d = {}
         self.based_datafact_l = []
 
     
@@ -79,12 +82,14 @@ class Section:
         - message: OpenAi APIに入力した部分
         """
         def make_section_sentences(sentences_l, df_meata_info, model, previous_message=None):
+            print(f"\n{datetime.fromtimestamp(time.time())}::節の文章生成を開始\nmodel = {model}")
             drilldown_path = "=>".join(df_meata_info.drilldown_path_l)
             sentences_d = dict([(i,s)for i, s in enumerate(sentences_l)])
             data = {
                 "drilldown_path":drilldown_path,
                 "agg_attr":self.attr_and_f_tuple[0],
-                "agg_f":self.attr_and_f_tuple[1]
+                "agg_f":self.attr_and_f_tuple[1],
+                "table_description":df_meata_info.df_description
             }
             client = OpenAI(api_key=API_KEY)
             prompt = Template(BASE_PROMPT).render(data)
@@ -95,16 +100,17 @@ class Section:
             if(previous_message):
                 messages = previous_message + messages
             response = client.chat.completions.create(model=model, messages=messages)
-            logger.info(f'section.py\n{response.choices[0].message.content}')
+            # logger.info(f'section.py\n{response.choices[0].message.content}')
             content = json.loads(response.choices[0].message.content)
             response = to_dict_recursive(response)
             logger.info(f'section.py\n{content}')
+            print(f"{datetime.fromtimestamp(time.time())}::節の文章生成を終了")
             return [content, messages]
         
-        make_templates(datafact_l, manager, ordinal_d, table_description, model="o1-preview")
-        sentences_l = [render_sentence(datafact) for datafact in datafact_l]
-        content, messages = make_section_sentences(sentences_l, df_meta_info, model='gpt-4o')
-        ambiguous_datafact = [datafact_l[i] for i in content["ambiguous_datafact"]]
+        make_templates(datafact_l, manager, ordinal_d, table_description, model="o1-preview") 
+        self.based_datafact_text_l = [render_sentence(datafact) for datafact in datafact_l]
+        content, messages = make_section_sentences(self.based_datafact_text_l, df_meta_info, model='gpt-4o')
+        # ambiguous_datafact = [datafact_l[i] for i in content["ambiguous_datafact"]]
         # if(ambiguous_datafact!=[]):
         #     make_templates(ambiguous_datafact, manager, ordinal_d, table_description, model="o1-preview")
         #     sentences_l = [render_sentence(datafact) for datafact in datafact_l]
@@ -113,17 +119,21 @@ class Section:
         #     messages.append({"role": "user", "content": "解釈が一意でないデータファクトについて、修正しました。ambiguous_datafactとしたデータファクトを再確認してもらい、もう一度同じタスクをお願いします。"})
         #     content, messages = make_section_sentences(sentences_l, df_meta_info, model='gpt-4o', previous_message=messages)
 
+        all_senteces = ''
         for k, v in content['sentences'].items():
-            self.sentences[k] = v['sentence']
-            self.based_datafact[k] = v['based_datafact']
-            logger.info(f"Section.make_section\n{v['sentence']}")
+            self.sentenceNum_to_sentence_d[k] = v['sentence']
+            self.sentenceNum_to_datafactIndex_d[k] = v['based_datafact']
+            all_senteces += v['sentence']
+        logger.info(f"Section.make_section\n{all_senteces}")
 
         for k, v in content['sentences'].items():
             for datafact_n in v['based_datafact']:
                 for datafacts in datafact2datafacts(datafact_l[datafact_n]):
                     results = manager.search_result(datafacts.subject, datafacts.operation)
-                    logger.info(f"Section.make_section\n{debug_datafact(datafacts)}")
-                    logger.info(f"Section.make_section\n{results}")
+                    if(k in self.sentenceNum_to_datafactsResult_d):
+                        self.sentenceNum_to_datafactsResult_d[k].append(results)
+                    else:
+                        self.sentenceNum_to_datafactsResult_d[k] = [results] 
         return None
 
 

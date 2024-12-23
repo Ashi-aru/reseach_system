@@ -12,6 +12,7 @@ from drilldown import drilldown
 from cal_significance import cal_subtree_significance
 from cal_datafact import cal_subtree_nodes
 from section import Section
+from format_sentences import format_sentences
 
 
 PROJ_DIR = Path(__file__).resolve().parent
@@ -39,7 +40,7 @@ if(__name__ == '__main__'):
     table = '_amazon-purchases.csv'
     df = pd.read_csv(DATA_DIR/f'tables/{table}')
     sample_df = df.head(2)
-    df_description = "2018年から2023年にかけての米国の5027人のAmazon.comユーザーの購入履歴。データセットのサイズは300MB超。"
+    df_description = "このデータセットは、2018年から2023年にかけて米国のAmazon.comユーザー5,027名の購入履歴をまとめたものになっています。各行は1件のAmazon注文を示しています。"
     analysis_goal = "['Shipping Adress State', 'y', 'Category']の順でドリルダウンすることによる分析" # , 'Category'
     focus_attr_l = ["Purchase Price Per Unit"] # "Quantity"
     ordinal_d = {"y":[2024, 2023, 2022, 2021, 2020, 2019, 2018]}
@@ -74,6 +75,7 @@ if(__name__ == '__main__'):
             datafact_l_to_verbalize = drilldown(s_node,manager,ordinal_d,df_meta_info,agg_attr,agg_f)
             section = Section((agg_attr,agg_f))
             section.make_section(datafact_l_to_verbalize,manager,ordinal_d,df_meta_info)
+            format_sentences(section, "日経ビジネス", df_meta_info, model='gpt-4o')
 
     # datafact_l_to_verbalize = drilldown(s_node, manager, ordinal_d, df_meta_info)
 
