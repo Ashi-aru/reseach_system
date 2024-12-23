@@ -39,7 +39,7 @@ if(__name__ == '__main__'):
     table = '_amazon-purchases.csv'
     df = pd.read_csv(DATA_DIR/f'tables/{table}')
     sample_df = df.head(2)
-    df_description = "2018年から2022年にかけての米国の5027人のAmazon.comユーザーの購入履歴。データセットのサイズは300MB超。"
+    df_description = "2018年から2023年にかけての米国の5027人のAmazon.comユーザーの購入履歴。データセットのサイズは300MB超。"
     analysis_goal = "['Shipping Adress State', 'y', 'Category']の順でドリルダウンすることによる分析" # , 'Category'
     focus_attr_l = ["Purchase Price Per Unit"] # "Quantity"
     ordinal_d = {"y":[2024, 2023, 2022, 2021, 2020, 2019, 2018]}

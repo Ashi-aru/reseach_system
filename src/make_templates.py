@@ -48,7 +48,7 @@ def make_prompt(base_prompt, table_description=None, datafact_num=None, td_flg=F
 def make_templates(datafact_l, manager, ordinal_d, table_description, model="o1-mini"):
     s = time.time()
     print(f"\n{datetime.fromtimestamp(time.time())}::テンプレートの生成を開始")
-    start, end, step_n = 0, 0, 20
+    start, end, step_n = 0, 0, 50
     base_prompt = make_prompt(BASE_PROMPT, table_description=table_description, td_flg=True)
     while end < len(datafact_l):
         print(f'make_templates.py\nstart={start}, end={end}')

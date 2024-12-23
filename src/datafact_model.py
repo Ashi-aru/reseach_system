@@ -112,7 +112,7 @@ class Datafact:
                     None_l = [k for k,v in results_d.items() if(v is None)]
                     results_d = dict([(k,v) for k,v in results_d.items() if(v is not None)])
                     sorted_results_d = dict(sorted(results_d.items(), key=lambda item: item[1], reverse=order))
-                    ranks_d = dict([(key, i) for i, key in enumerate(list(sorted_results_d.keys()))])
+                    ranks_d = dict([(key, i+1) for i, key in enumerate(list(sorted_results_d.keys()))])
                     for k in None_l:
                         ranks_d[k] = None
                     # 次に備えて、ranks_dは保存しておく

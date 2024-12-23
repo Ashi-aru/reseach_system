@@ -11,6 +11,7 @@ from logging_config import setup_logger
 from debug import debug_datafact
 from make_templates import make_templates
 from others import to_dict_recursive
+from make_datafact import datafact2datafacts
 logger = setup_logger()
 
 
@@ -66,6 +67,8 @@ class Section:
         def render_sentence(datafact):
             template = Template(manager.search_template(datafact.subject, datafact.operation))
             value = manager.search_result(datafact.subject, datafact.operation)
+            if(value is None):
+                return None
             return template.render(value=value)
         """
         各文からsectionの文章を生成する関数
@@ -75,7 +78,7 @@ class Section:
         - section: OpenAi APIの出力のcontent部分
         - message: OpenAi APIに入力した部分
         """
-        def make_section_sentences(sentences_l, df_meata_info, model):
+        def make_section_sentences(sentences_l, df_meata_info, model, previous_message=None):
             drilldown_path = "=>".join(df_meata_info.drilldown_path_l)
             sentences_d = dict([(i,s)for i, s in enumerate(sentences_l)])
             data = {
@@ -89,27 +92,38 @@ class Section:
                     {"role": "user", "content": prompt},
                     {"role": "user", "content": "入力:\n"+json.dumps(sentences_d,ensure_ascii=False,indent=4)+"\n\n出力:\n"},
                     ]
+            if(previous_message):
+                messages = previous_message + messages
             response = client.chat.completions.create(model=model, messages=messages)
+            logger.info(f'section.py\n{response.choices[0].message.content}')
             content = json.loads(response.choices[0].message.content)
             response = to_dict_recursive(response)
             logger.info(f'section.py\n{content}')
             return [content, messages]
         
-        make_templates(datafact_l, manager, ordinal_d, table_description, model="o1-mini")
+        make_templates(datafact_l, manager, ordinal_d, table_description, model="o1-preview")
         sentences_l = [render_sentence(datafact) for datafact in datafact_l]
         content, messages = make_section_sentences(sentences_l, df_meta_info, model='gpt-4o')
         ambiguous_datafact = [datafact_l[i] for i in content["ambiguous_datafact"]]
-
-        make_templates(ambiguous_datafact, manager, ordinal_d, table_description, model="o1-preview")
-        sentences_l = [render_sentence(datafact) for datafact in datafact_l]
-        content, messages = make_section_sentences(sentences_l, df_meta_info, model='gpt-4o')
+        # if(ambiguous_datafact!=[]):
+        #     make_templates(ambiguous_datafact, manager, ordinal_d, table_description, model="o1-preview")
+        #     sentences_l = [render_sentence(datafact) for datafact in datafact_l]
+        #     for s in sentences_l:
+        #         print(s)
+        #     messages.append({"role": "user", "content": "解釈が一意でないデータファクトについて、修正しました。ambiguous_datafactとしたデータファクトを再確認してもらい、もう一度同じタスクをお願いします。"})
+        #     content, messages = make_section_sentences(sentences_l, df_meta_info, model='gpt-4o', previous_message=messages)
 
         for k, v in content['sentences'].items():
             self.sentences[k] = v['sentence']
             self.based_datafact[k] = v['based_datafact']
             logger.info(f"Section.make_section\n{v['sentence']}")
-            for n in v['based_datafact']:
-                logger.info(f"{debug_datafact(datafact_l[n])}")
+
+        for k, v in content['sentences'].items():
+            for datafact_n in v['based_datafact']:
+                for datafacts in datafact2datafacts(datafact_l[datafact_n]):
+                    results = manager.search_result(datafacts.subject, datafacts.operation)
+                    logger.info(f"Section.make_section\n{debug_datafact(datafacts)}")
+                    logger.info(f"Section.make_section\n{results}")
         return None
 
 
