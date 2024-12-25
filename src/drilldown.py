@@ -85,10 +85,10 @@ def drilldown(s_node, manager, ordinal_d, df_meta_info, agg_attr, agg_f):
             """
             subject = make_subject(node_path=node, drilldown_attr=drilldown_path_l)
             for i in range(1,4):
-                for operation in make_operations(agg_attrs, agg_f_d, operator_d, subject, ordinal_d, i, attr_type):
+                for operation in make_operations(agg_attrs, agg_f_d, operator_d, subject, ordinal_d, i, attr_type, manager):
                     if(not is_aggattr_and_aggf_operation(operation, agg_attr, agg_f)): # operationがagg_attr関連かつagg_f関連でない時
                         continue
-                    datafact = Datafact(subject=subject, operation=operation)
+                    datafact = Datafact(subject=subject, operation=operation, manager=manager)
                     textdatafact_l.append(datafact)
             """
             子ノードの探索

@@ -106,7 +106,7 @@ subject、被Aggregation属性、Aggregation_f, Operatorを受け取り、datafa
 出力
 - operation_l: datafact.operationのリスト。
 """
-def make_operations(agg_attrs, agg_f_d, operator_d, subject, ordinal_d, step_n, attr_type):
+def make_operations(agg_attrs, agg_f_d, operator_d, subject, ordinal_d, step_n, attr_type, manager):
     """
     Scalar Arithmeticが可能であるかどうか判定する
     """
@@ -146,8 +146,8 @@ def make_operations(agg_attrs, agg_f_d, operator_d, subject, ordinal_d, step_n, 
                     operation_scalar = [
                         "ScalarArithmetic", 
                         OPERATOR_D[op], 
-                        Datafact(subject1, operation_agg),
-                        Datafact(subject2, operation_agg)
+                        Datafact(subject1, operation_agg, manager),
+                        Datafact(subject2, operation_agg, manager)
                     ]
                     operation_l.append(operation_scalar)
     if(step_n==2):
@@ -157,7 +157,7 @@ def make_operations(agg_attrs, agg_f_d, operator_d, subject, ordinal_d, step_n, 
                 if(f_num>=11): continue
                 operation_agg = ["Aggregation", agg_attr, F_NUM2F_NAME_D[f_num]]
                 subject_ = [parents, col_name, ["*"]]
-                operation_agg_rank = ["Rank", "降順", Datafact(subject_, operation_agg)]
+                operation_agg_rank = ["Rank", "降順", Datafact(subject_, operation_agg, manager)]
                 operation_l.append(operation_agg_rank)
 
                 # Aggregation→Scalar→Rank
@@ -170,13 +170,13 @@ def make_operations(agg_attrs, agg_f_d, operator_d, subject, ordinal_d, step_n, 
                     operation_scalar = [
                         "ScalarArithmetic", 
                         OPERATOR_D[op], 
-                        Datafact(subject1, operation_agg),
-                        Datafact(subject2, operation_agg)
+                        Datafact(subject1, operation_agg, manager),
+                        Datafact(subject2, operation_agg, manager)
                     ]
                     operation_scalar_rank = [
                         "Rank",
                         "降順",
-                        Datafact([parents, col_name, ["*"]], operation_scalar)
+                        Datafact([parents, col_name, ["*"]], operation_scalar, manager)
                     ]
                     operation_l.append(operation_scalar_rank)
     if(step_n==3):
@@ -184,7 +184,7 @@ def make_operations(agg_attrs, agg_f_d, operator_d, subject, ordinal_d, step_n, 
             for f_num in agg_f_d[agg_attr]:
                 if(f_num>=11): continue
                 operation_agg = ["Aggregation", agg_attr, F_NUM2F_NAME_D[f_num]]
-                operation_agg_rank = ["Rank", "降順", Datafact([parents, col_name, ["*"]], operation_agg)]
+                operation_agg_rank = ["Rank", "降順", Datafact([parents, col_name, ["*"]], operation_agg, manager)]
                 if(not can_ScalarArithmetic(agg_attr, f_num, col_name)):
                     continue
                 n = ordinal_d[col_name].index(filter_value[0])
@@ -194,8 +194,8 @@ def make_operations(agg_attrs, agg_f_d, operator_d, subject, ordinal_d, step_n, 
                     operation_agg_rank_scalar = [
                         "ScalarArithmetic", 
                         OPERATOR_D[op], 
-                        Datafact(subject1, operation_agg_rank),
-                        Datafact(subject2, operation_agg_rank)
+                        Datafact(subject1, operation_agg_rank, manager),
+                        Datafact(subject2, operation_agg_rank, manager)
                     ]
                     # logger.info(f'make_operation.py:\n{operation_agg_rank_scalar}')
                     operation_l.append(operation_agg_rank_scalar)
@@ -214,7 +214,7 @@ datafacts用に、datafact.operationのリストを出力する関数
 出力
 - operation_l: datafact.operationのリスト。
 """
-def make_operations_for_datafacts(agg_attrs, agg_f_d, operator_d, subject, ordinal_d, attr_type):
+def make_operations_for_datafacts(agg_attrs, agg_f_d, operator_d, subject, ordinal_d, attr_type, manager):
     """
     Scalar Arithmeticが可能であるかどうか判定する
     """
@@ -241,8 +241,8 @@ def make_operations_for_datafacts(agg_attrs, agg_f_d, operator_d, subject, ordin
             operation_scalar = [
                 "ScalarArithmetic", 
                 OPERATOR_D[op], 
-                Datafact(subject1, operation),
-                Datafact(subject2, operation)
+                Datafact(subject1, operation, manager),
+                Datafact(subject2, operation, manager)
             ]
             operation_l.append(operation_scalar)
         return operation_l
@@ -267,7 +267,7 @@ def make_operations_for_datafacts(agg_attrs, agg_f_d, operator_d, subject, ordin
     #     for f_num in agg_f_d[agg_attr]:
     #         if(f_num>=11): continue
     #         operation_agg = ["Aggregation", agg_attr, F_NUM2F_NAME_D[f_num]]
-    #         operation_agg_rank = ["Rank", "降順", Datafact([parents, col_name, ["*"]], operation_agg)]
+    #         operation_agg_rank = ["Rank", "降順", Datafact([parents, col_name, ["*"]], operation_agg, manager)]
     #         if(not can_ScalarArithmetic(agg_attr, f_num, col_name)):
     #             continue
     #         operation_l = make_ScalarArithmetic(operation_agg_rank, operation_l)

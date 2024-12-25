@@ -128,9 +128,9 @@ def cal_subtree_significance(s_node, manager, ordinal_d, df_meta_info):
                     node_path = []
                 node_path.append('*')
                 subject = make_subject(node_path=node_path, drilldown_attr=drilldown_path_l)
-                operation_l = make_operations_for_datafacts(agg_attrs, agg_f_d, operator_d, subject, ordinal_d, attr_type)
+                operation_l = make_operations_for_datafacts(agg_attrs, agg_f_d, operator_d, subject, ordinal_d, attr_type, manager)
                 for operation in operation_l:
-                    datafacts = Datafact(subject=subject, operation=operation)
+                    datafacts = Datafact(subject=subject, operation=operation, manager=manager)
                     datafacts_l.append(datafacts)
                 # print(datafacts_l)
             """
@@ -147,9 +147,9 @@ def cal_subtree_significance(s_node, manager, ordinal_d, df_meta_info):
                     node_path = copy.deepcopy(p_node)
                     node_path[-2] = "*"
                     subject = make_subject(node_path=node_path, drilldown_attr=drilldown_path_l)
-                    operation_l = make_operations_for_datafacts(agg_attrs, agg_f_d, operator_d, subject, ordinal_d, attr_type)
+                    operation_l = make_operations_for_datafacts(agg_attrs, agg_f_d, operator_d, subject, ordinal_d, attr_type, manager)
                     for operation in operation_l:
-                        datafacts = Datafact(subject=subject, operation=operation)
+                        datafacts = Datafact(subject=subject, operation=operation, manager=manager)
                         datafacts_l.append(datafacts)
             """
             再帰的に上の処理を繰り返す
@@ -206,8 +206,8 @@ def cal_subtree_significance(s_node, manager, ordinal_d, df_meta_info):
                     c_operation = [
                         "ScalarArithmetic", 
                         op, 
-                        Datafact(subject1, datafact1.operation),
-                        Datafact(subject2, datafact2.operation)
+                        Datafact(subject1, datafact1.operation, manager),
+                        Datafact(subject2, datafact2.operation, manager)
                     ]
                     values[c_node[-1]] = manager.search_result(c_subject, c_operation)
             elif(flg): # c_node:['静岡県','製造業',2018], ['静岡県','サービス業',2018], ..
@@ -222,8 +222,8 @@ def cal_subtree_significance(s_node, manager, ordinal_d, df_meta_info):
                     c_operation = [
                         "ScalarArithmetic", 
                         op, 
-                        Datafact(subject1, datafact1.operation),
-                        Datafact(subject2, datafact2.operation)
+                        Datafact(subject1, datafact1.operation, manager),
+                        Datafact(subject2, datafact2.operation, manager)
                     ]
                     values[c_node[-1]] = manager.search_result(c_subject, c_operation)
             else:
@@ -244,14 +244,16 @@ def cal_subtree_significance(s_node, manager, ordinal_d, df_meta_info):
             if(filter_values==['*']):
                 datafact = Datafact(
                     subject=[parents, col_name, [v]],
-                    operation=datafacts.operation
+                    operation=datafacts.operation,
+                    manager = manager
                 )
             elif(flg):
                 parents = copy.deepcopy(parents)
                 parents[key_attr]=v
                 datafact = Datafact(
                     subject=[parents, col_name, filter_values],
-                    operation=datafacts.operation
+                    operation=datafacts.operation,
+                    manager = manager
                 )
             else:
                 raise ValueError('datafactsではありません')
@@ -264,9 +266,10 @@ def cal_subtree_significance(s_node, manager, ordinal_d, df_meta_info):
                     subject=[parents, col_name, [v]],
                     operation=[
                         op,
-                        Datafact(subject1, datafact1.operation),
-                        Datafact(subject2, datafact2.operation)
-                    ]
+                        Datafact(subject1, datafact1.operation, manager),
+                        Datafact(subject2, datafact2.operation, manager)
+                    ],
+                    manager = manager
                 )
             elif(flg):
                 parents = copy.deepcopy(parents)
@@ -279,9 +282,10 @@ def cal_subtree_significance(s_node, manager, ordinal_d, df_meta_info):
                     subject=[parents, col_name, filter_values],
                     operation=[
                         op,
-                        Datafact(subject1, datafact1.operation),
-                        Datafact(subject2, datafact2.operation)
-                    ]
+                        Datafact(subject1, datafact1.operation, manager),
+                        Datafact(subject2, datafact2.operation, manager)
+                    ],
+                    manager=manager
                 )
             else:
                 raise ValueError('datafactsではありません')

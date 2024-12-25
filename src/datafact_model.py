@@ -22,9 +22,10 @@ class Datafact:
     - datafact.subject = [{"県":"東京都", "年":2022}, "大分類", ["製造業"]]
     - datafact.operation = ["Aggregation", "売上高", "mean"]
     """
-    def __init__(self, subject, operation, ):
+    def __init__(self, subject, operation, manager):
         self.subject = subject
         self.operation = operation
+        manager.update_datafacts(subject, operation, self)
     
     """
     ドリルダウンの木構造における、ノードの計算を実施する関数
@@ -163,8 +164,8 @@ class Datafact:
                 parents_, column_name_, _ = datafact1.subject
                 parents_, column_name_, _ = datafact2.subject
                 for i in range(len(ordinal_d[column_name_])-1):
-                    n_datafact1 = Datafact(subject=[parents_, column_name_, [ordinal_d[column_name_][i]]], operation=datafact1.operation)
-                    n_datafact2 = Datafact(subject=[parents_, column_name_, [ordinal_d[column_name_][i+1]]], operation=datafact2.operation)
+                    n_datafact1 = Datafact(subject=[parents_, column_name_, [ordinal_d[column_name_][i]]], operation=datafact1.operation, manager=manager)
+                    n_datafact2 = Datafact(subject=[parents_, column_name_, [ordinal_d[column_name_][i+1]]], operation=datafact2.operation, manager=manager)
                     n_operation = ["ScalarArithmetic", operator, n_datafact1, n_datafact2]
                     result_d[ordinal_d[column_name_][i]] = manager.search_result(n_datafact1.subject, n_operation)
                     
@@ -177,11 +178,11 @@ class Datafact:
                 for i in range(len(ordinal_d[sig_key])-1):
                     n_parents1 = copy.deepcopy(parents)
                     n_parents1[sig_key] = ordinal_d[sig_key][i]
-                    n_datafact1 = Datafact(subject=[n_parents1, column_name_, filter_values_], operation=datafact1.operation)
+                    n_datafact1 = Datafact(subject=[n_parents1, column_name_, filter_values_], operation=datafact1.operation, manager=manager)
                     
                     n_parents2 = copy.deepcopy(parents)
                     n_parents2[sig_key] = ordinal_d[sig_key][i+1]
-                    n_datafact2 = Datafact(subject=[n_parents2, column_name_, filter_values_], operation=datafact2.operation)
+                    n_datafact2 = Datafact(subject=[n_parents2, column_name_, filter_values_], operation=datafact2.operation, manager=manager)
 
                     n_operation = ["ScalarArithmetic", operator, n_datafact1, n_datafact2]
                     result_d[ordinal_d[sig_key][i]] = manager.search_result(n_datafact1.subject, n_operation)

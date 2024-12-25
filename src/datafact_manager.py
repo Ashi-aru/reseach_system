@@ -81,6 +81,10 @@ class DatafactManager:
             data_d[subject_key][operation_key] = update_data
         # logger.info(self.significances[subject_key][operation_key])
         return None
+    
+    def update_datafacts(self, subject, operaion, update_datafact, makekey_flg=True):
+        self.update_data(subject, operaion, update_datafact, "datafacts", makekey_flg)
+        return None
 
     def update_results(self, subject, operation, result, makekey_flg=True):
         self.update_data(subject, operation, result, "results", makekey_flg)

@@ -44,9 +44,9 @@ def cal_subtree_nodes(s_node, manager, ordinal_d, df_meta_info):
         agg_f_d = df_meta_info.aggregation_f_d
         operator_d = df_meta_info.operator_d
         attr_type = df_meta_info.attr_type_d
-        operations = make_operations(agg_attrs, agg_f_d, operator_d, subject, ordinal_d, step_n, attr_type)
+        operations = make_operations(agg_attrs, agg_f_d, operator_d, subject, ordinal_d, step_n, attr_type, manager)
         for operation in operations:
-            datafact = Datafact(subject=subject, operation=operation)
+            datafact = Datafact(subject=subject, operation=operation, manager=manager)
             # logger.info(f'drilldown.py:\n{debug_datafact(datafact)}')
             # print(debug_datafact(datafact))
             datafact.handle_datafact(manager, df, ordinal_d)

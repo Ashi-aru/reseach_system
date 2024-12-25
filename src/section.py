@@ -128,7 +128,7 @@ class Section:
 
         for k, v in content['sentences'].items():
             for datafact_n in v['based_datafact']:
-                for datafacts in datafact2datafacts(datafact_l[datafact_n]):
+                for datafacts in datafact2datafacts(datafact_l[datafact_n], manager=manager):
                     results = manager.search_result(datafacts.subject, datafacts.operation)
                     if(k in self.sentenceNum_to_datafactsResult_d):
                         self.sentenceNum_to_datafactsResult_d[k].append(results)

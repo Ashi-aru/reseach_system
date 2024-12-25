@@ -19,14 +19,15 @@ datafactを受け取り、それが含まれるdatafactsのリストを返す関
 【出力】
 - datafacts_l: datafactが含まれるdatafactsのリスト
 """
-def datafact2datafacts(datafact):
+def datafact2datafacts(datafact, manager):
     datafacts_l = []
     parents, column_name, filter_values = datafact.subject
     operation_name, *operation_others = datafact.operation
     if(operation_name=="Aggregation"):
         datafacts1 = Datafact(
             subject = [parents, column_name, ['*']],
-            operation = datafact.operation
+            operation = datafact.operation,
+            manager=manager
         )
         datafacts_l.append(datafacts1)
         if(parents!={}):
@@ -38,7 +39,8 @@ def datafact2datafacts(datafact):
                     n_parents[k] = v
             datafacts2 = Datafact(
                 subject = [n_parents, column_name, filter_values],
-                operation = datafact.operation
+                operation = datafact.operation,
+                manager=manager
             )
             datafacts_l.append(datafacts2)
     elif(operation_name=="ScalarArithmetic"):
@@ -49,15 +51,18 @@ def datafact2datafacts(datafact):
         if(operation_name1=="Aggregation"):
             datafact1 = Datafact(
                 subject = [parents1, column_name1, ['n']],
-                operation = datafact1.operation
+                operation = datafact1.operation,
+                manager=manager
             )
             datafact2 = Datafact(
                 subject = [parents2, column_name2, ['n-1']],
-                operation = datafact2.operation
+                operation = datafact2.operation,
+                manager=manager
             )
             datafacts1 = Datafact(
                 subject = [parents, column_name, ['*']],
-                operation = ["ScalarArithmetic", op, datafact1, datafact2]
+                operation = ["ScalarArithmetic", op, datafact1, datafact2],
+                manager=manager
             )
             datafacts_l.append(datafacts1)
             if(parents!={}):
@@ -74,13 +79,16 @@ def datafact2datafacts(datafact):
                         op, 
                         Datafact(
                             subject = [n_parents, column_name1, fliter_values1],
-                            operation = datafact1.operation
+                            operation = datafact1.operation,
+                            manager=manager
                         ), 
                         Datafact(
                             subject = [n_parents, column_name2, fliter_values2],
-                            operation = datafact2.operation
+                            operation = datafact2.operation,
+                            manager=manager
                         )
-                    ]
+                    ],
+                    manager=manager
                 )
                 datafacts_l.append(datafacts2)
         else:
@@ -96,9 +104,11 @@ def datafact2datafacts(datafact):
                     order,
                     Datafact(
                         subject=[parents, column_name, ['*']],
-                        operation=datafacts1.operation
+                        operation=datafacts1.operation,
+                        manager=manager
                     )
-                ]
+                ],
+                manager=manager
             )
             datafacts_l.append(datafacts)
         elif(operation_name1=='ScalarArithmetic'):
@@ -109,11 +119,13 @@ def datafact2datafacts(datafact):
             if(operation_name1_1=="Aggregation"):
                 datafact1_1 = Datafact(
                     subject = [parents1_1, column_name1_1, ['n']],
-                    operation = datafact1_1.operation
+                    operation = datafact1_1.operation,
+                    manager=manager
                 )
                 datafact1_2 = Datafact(
                     subject = [parents1_2, column_name1_2, ['n-1']],
-                    operation = datafact1_2.operation
+                    operation = datafact1_2.operation,
+                    manager=manager
                 )
                 datafacts2 = Datafact(
                     subject = [parents, column_name, ['*']],
@@ -122,9 +134,11 @@ def datafact2datafacts(datafact):
                         order, 
                         Datafact(
                             subject=[parents, column_name, ['*']],
-                            operation=[operation_name1, op, datafact1_1, datafact1_2]
+                            operation=[operation_name1, op, datafact1_1, datafact1_2],
+                            manager=manager
                         )
-                    ]
+                    ],
+                    manager=manager
                 )
                 datafacts_l.append(datafacts2)
             else:
