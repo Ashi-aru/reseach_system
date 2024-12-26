@@ -81,7 +81,7 @@ def drilldown(s_node, manager, ordinal_d, df_meta_info, agg_attr, agg_f, plus_va
     - text_datafact_l:言語化するデータファクトを
     """
     def bfs(s_node, agg_attr, agg_f, textdatafact_l=[]):
-        dd_nodes_num_l = [3,2,1] if(len(drilldown_path_l)==3) else [4,2] # 各階層でのドリルダウンノード数
+        dd_nodes_num_l = [3,2,1] if(len(drilldown_path_l)==3) else [4,4] # 各階層でのドリルダウンノード数
         queue = deque()
         queue.append(s_node)
         while queue:

@@ -108,7 +108,7 @@ class Section:
             print(f"{datetime.fromtimestamp(time.time())}::節の文章生成を終了")
             return [content, messages]
         
-        make_templates(datafact_l, manager, ordinal_d, table_description, model="o1-preview") 
+        make_templates(datafact_l, manager, ordinal_d, table_description, model="o1-mini") 
         self.based_datafact_text_l = [render_sentence(datafact, i) for i, datafact in enumerate(datafact_l)]
         content, messages = make_section_sentences(self.based_datafact_text_l, df_meta_info, model='gpt-4o')
         # ambiguous_datafact = [datafact_l[i] for i in content["ambiguous_datafact"]]

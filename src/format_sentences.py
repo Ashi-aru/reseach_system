@@ -35,6 +35,7 @@ logger = setup_logger()
     - object.sentenceNum_to_sentence_d, object.sentenceNum_to_datafactIndex_dを修正したものを出力
 """
 def format_sentences(s_obj, papaer_name, df_meta_info, model='gpt-4o'):
+    print(f"\n{datetime.fromtimestamp(time.time())}::文章の編集を開始\nmodel = {model}")
     sentences_num = len(s_obj.sentenceNum_to_sentence_d)
     draft = dict([
         (
@@ -73,4 +74,5 @@ def format_sentences(s_obj, papaer_name, df_meta_info, model='gpt-4o'):
     logger.info(f"Section.make_section\n{all_senteces}")
     s_obj.sentenceNum_to_sentence_d = n_sentenceNum_to_sentence_d
     s_obj.sentenceNum_to_datafactIndex_d = n_sentenceNum_to_datafactIndex_d
+    print(f"{datetime.fromtimestamp(time.time())}::文章の編集を終了")
     return [content, messages]

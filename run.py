@@ -40,8 +40,8 @@ if(__name__ == '__main__'):
     table = 'n_amazon-purchases.csv'
     df = pd.read_csv(DATA_DIR/f'tables/{table}')
     sample_df = df.head(2)
-    df_description = "このデータセットは、2018年から2023年にかけて米国のAmazon.comユーザー5,027名の購入履歴をまとめたものになっています。各行は1件のAmazon注文を示しています。"
-    analysis_goal = "['Shipping Adress State', 'y', 'Category']の順でドリルダウンすることによる分析" # , 'Category'
+    df_description = "このデータセットは、2018年から2022年にかけて米国のAmazon.comユーザー5,027名の購入履歴をまとめたものになっています。各行は1件のAmazon注文を示しています。"
+    analysis_goal = "['Shipping Adress State , 'y', 'Category']の順でドリルダウンすることによる分析をしてください。" # 特に、アラスカ・ハワイの対比について詳しく記述してください。, 'y'
     focus_attr_l = ["Purchase Price Per Unit"] # "Quantity"
     ordinal_d = {"y":[2022, 2021, 2020, 2019, 2018]}
     s_node = ["_root"] # root以外の時は、ノードへのパス（例:["製造業","静岡県",2022]）となる。
@@ -72,11 +72,11 @@ if(__name__ == '__main__'):
     for agg_attr in focus_attr_l:
         for f_num in df_meta_info.aggregation_f_d[agg_attr]:
             agg_f = F_NUM2F_NAME_D[f_num]
-            plus_values = {tuple(['HI']):5, tuple(['AK']):5}
+            plus_values = {tuple(['HI']):5}
             datafact_l_to_verbalize = drilldown(s_node,manager,ordinal_d,df_meta_info,agg_attr,agg_f, plus_values)
             section = Section((agg_attr,agg_f))
             section.make_section(datafact_l_to_verbalize,manager,ordinal_d,df_meta_info)
-            format_sentences(section, "日経ビジネス", df_meta_info, model='gpt-4o')
+            format_sentences(section, "日経ビジネス", df_meta_info, model='o1-preview')
 
     # datafact_l_to_verbalize = drilldown(s_node, manager, ordinal_d, df_meta_info)
 

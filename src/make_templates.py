@@ -48,7 +48,7 @@ def make_prompt(base_prompt, table_description=None, datafact_num=None, td_flg=F
 def make_templates(datafact_l, manager, ordinal_d, table_description, model="o1-preview"):
     s = time.time()
     print(f"\n{datetime.fromtimestamp(time.time())}::テンプレートの生成を開始\nmodel = {model}")
-    start, end, step_n = 0, 0, 70
+    start, end, step_n = 0, 0, 40
     base_prompt = make_prompt(BASE_PROMPT, table_description=table_description, td_flg=True)
     while end < len(datafact_l):
         print(f'make_templates.py\nstart={start}, end={end}')
@@ -66,6 +66,7 @@ def make_templates(datafact_l, manager, ordinal_d, table_description, model="o1-
                 {"role": "user", "content": "Input:\n"+json.dumps(flows_d,ensure_ascii=False,indent=4)+"\n\nOutput:\n"},
                 ]
         response = client.chat.completions.create(model=model, messages=messages)
+        logger.info(f"make_templates.py\n{response.choices[0].message.content}")
         content = json.loads(response.choices[0].message.content)
         response = to_dict_recursive(response)
         logger.info(f"make_templates.py\n{json.dumps(content,ensure_ascii=False,indent=4)}")
