@@ -37,7 +37,7 @@ def make_prompt(base_prompt, table_description=None, datafact_num=None, td_flg=F
     if(td_flg):
         base_prompt = re.sub(r"\[\[table_description\]\]", table_description, base_prompt, count=1)
     if(dn_flg):
-        base_prompt = re.sub(r"\[\[datafact_num\]\]", str(datafact_num), base_prompt, count=2)
+        base_prompt = re.sub(r"\[\[datafact_num\]\]", str(datafact_num), base_prompt, count=3)
     return base_prompt
 
 """
@@ -48,7 +48,7 @@ def make_prompt(base_prompt, table_description=None, datafact_num=None, td_flg=F
 def make_templates(datafact_l, manager, ordinal_d, table_description, model="o1-preview"):
     s = time.time()
     print(f"\n{datetime.fromtimestamp(time.time())}::テンプレートの生成を開始\nmodel = {model}")
-    start, end, step_n = 0, 0, 50
+    start, end, step_n = 0, 0, 70
     base_prompt = make_prompt(BASE_PROMPT, table_description=table_description, td_flg=True)
     while end < len(datafact_l):
         print(f'make_templates.py\nstart={start}, end={end}')

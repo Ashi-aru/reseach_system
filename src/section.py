@@ -67,11 +67,12 @@ class Section:
         """
         テンプレート化したdatafactに値をレンダリングする関数
         """
-        def render_sentence(datafact):
+        def render_sentence(datafact, n=None):
             template = Template(manager.search_template(datafact.subject, datafact.operation))
             value = manager.search_result(datafact.subject, datafact.operation)
             if(value is None):
                 return None
+            logger.info(f"section.py::datafact{n+1}={template.render(value=value)}\tvalue={value}")
             return template.render(value=value)
         """
         各文からsectionの文章を生成する関数
@@ -108,7 +109,7 @@ class Section:
             return [content, messages]
         
         make_templates(datafact_l, manager, ordinal_d, table_description, model="o1-preview") 
-        self.based_datafact_text_l = [render_sentence(datafact) for datafact in datafact_l]
+        self.based_datafact_text_l = [render_sentence(datafact, i) for i, datafact in enumerate(datafact_l)]
         content, messages = make_section_sentences(self.based_datafact_text_l, df_meta_info, model='gpt-4o')
         # ambiguous_datafact = [datafact_l[i] for i in content["ambiguous_datafact"]]
         # if(ambiguous_datafact!=[]):

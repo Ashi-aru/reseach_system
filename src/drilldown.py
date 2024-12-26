@@ -36,10 +36,12 @@ F_NUM2F_NAME_D = {
 - 属性のタイプ(Categoricalとか)情報のd
 - ordinal_d
 - df
+- plus_values: 1-p値に関する重みを保存した辞書。追加で加算する重みを保存
+    - キーはノードのパスのタプル、値は重み
 【出力】
 - datafact_l:言語化するデータファクトを格納したリスト
 """
-def drilldown(s_node, manager, ordinal_d, df_meta_info, agg_attr, agg_f):
+def drilldown(s_node, manager, ordinal_d, df_meta_info, agg_attr, agg_f, plus_values=None):
     agg_attrs = df_meta_info.focus_attr_l
     agg_f_d = df_meta_info.aggregation_f_d
     operator_d = df_meta_info.operator_d
@@ -60,9 +62,13 @@ def drilldown(s_node, manager, ordinal_d, df_meta_info, agg_attr, agg_f):
         for c_node in children:
             c_subject = make_subject(c_node, drilldown_path_l)
             c_subject_key = manager.make_key(c_subject, None)
-            if(c_subject_key not in manager.significances):
+            etc = plus_values[tuple(c_node)] if(tuple(c_node) in plus_values) else 0 # c_nodeがfocus_nodesに含まれる時、重みを加算
+            if(c_subject_key in manager.significances):
+                c_p_value_d[tuple(c_node)] = sum(manager.significances[c_subject_key].values()) + etc # (被Agg属性,Aggregation_f)ごとのp値に基づいてドリルダウンするなら、ここも取捨選択が必要
+            elif(etc>0):
+                c_p_value_d[tuple(c_node)] = etc
+            else:
                 continue
-            c_p_value_d[tuple(c_node)] = sum(manager.significances[c_subject_key].values())
         c_p_value_d = dict(sorted(c_p_value_d.items(), key=lambda x:x[1]))
         return c_p_value_d
 
