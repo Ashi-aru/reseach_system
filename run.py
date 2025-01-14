@@ -8,6 +8,7 @@ sys.path.append('/Users/ashikawaharuki/Desktop/research/TDB/test/system/src')
 from logging_config import setup_logger
 from dataframe_metainfo import DataFrameMetaInfo
 from datafact_manager import DatafactManager
+from datafact_model import Datafact
 from drilldown import drilldown
 from cal_significance import cal_subtree_significance
 from cal_datafact import cal_subtree_nodes
@@ -40,8 +41,8 @@ if(__name__ == '__main__'):
     table = 'n_amazon-purchases.csv'
     df = pd.read_csv(DATA_DIR/f'tables/{table}')
     sample_df = df.head(2)
-    df_description = "このデータセットは、2018年から2022年にかけて米国のAmazon.comユーザー5,027名の購入履歴をまとめたものになっています。各行は1件のAmazon注文を示しています。"
-    analysis_goal = "['Shipping Adress State , 'y', 'Category']の順でドリルダウンすることによる分析をしてください。" # 特に、アラスカ・ハワイの対比について詳しく記述してください。, 'y'
+    df_description = "このデータセットは、2018年から2022年にかけて米国のAmazon.comユーザー5,027名の購入履歴をまとめたものになっています。各行は1件のAmazon注文を示しており、価格の単位はドルになっています。"
+    analysis_goal = "['Shipping Adress State , 'y', 'Category']の順でドリルダウンすることによる分析を実施してください。" # 特に、アラスカ・ハワイの対比について詳しく記述してください。, 'y'
     focus_attr_l = ["Purchase Price Per Unit"] # "Quantity"
     ordinal_d = {"y":[2022, 2021, 2020, 2019, 2018]}
     s_node = ["_root"] # root以外の時は、ノードへのパス（例:["製造業","静岡県",2022]）となる。
@@ -69,14 +70,16 @@ if(__name__ == '__main__'):
     cal_subtree_nodes(s_node, manager, ordinal_d, df_meta_info)
     
     cal_subtree_significance(s_node, manager, ordinal_d, df_meta_info)
+
+    
     for agg_attr in focus_attr_l:
         for f_num in df_meta_info.aggregation_f_d[agg_attr]:
             agg_f = F_NUM2F_NAME_D[f_num]
-            plus_values = {tuple(['HI']):5}
+            plus_values = {tuple(['HI']):5} # , tuple(['CO']):5
             datafact_l_to_verbalize = drilldown(s_node,manager,ordinal_d,df_meta_info,agg_attr,agg_f, plus_values)
             section = Section((agg_attr,agg_f))
             section.make_section(datafact_l_to_verbalize,manager,ordinal_d,df_meta_info)
-            format_sentences(section, "日経ビジネス", df_meta_info, model='o1-preview')
+            format_sentences(section, "日経ビジネス", df_meta_info, model='o1-mini')
 
     # datafact_l_to_verbalize = drilldown(s_node, manager, ordinal_d, df_meta_info)
 

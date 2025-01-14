@@ -48,7 +48,7 @@ def make_prompt(base_prompt, table_description=None, datafact_num=None, td_flg=F
 def make_templates(datafact_l, manager, ordinal_d, table_description, model="o1-preview"):
     s = time.time()
     print(f"\n{datetime.fromtimestamp(time.time())}::テンプレートの生成を開始\nmodel = {model}")
-    start, end, step_n = 0, 0, 40
+    start, end, step_n = 0, 0, 25
     base_prompt = make_prompt(BASE_PROMPT, table_description=table_description, td_flg=True)
     while end < len(datafact_l):
         print(f'make_templates.py\nstart={start}, end={end}')
@@ -57,13 +57,14 @@ def make_templates(datafact_l, manager, ordinal_d, table_description, model="o1-
         end = start+step_n if(start+step_n<=len(datafact_l)) else len(datafact_l)
         for i, datafact in enumerate(datafact_l[start:end]):
             flows_d[f"flow_{start+i}"] = datafact.convert_datafact_to_operationflow(ordinal_d)
+            # logger.info(f'make_templates.py\n{json.dumps(flows_d[f"flow_{start+i}"],ensure_ascii=False,indent=4)}')
         # logger.info(json.dumps(flows_d,ensure_ascii=False,indent=4))
 
         client = OpenAI(api_key=API_KEY)
         prompt = make_prompt(base_prompt,datafact_num=end-start,dn_flg=True)
         messages = [
                 {"role": "user", "content": prompt},
-                {"role": "user", "content": "Input:\n"+json.dumps(flows_d,ensure_ascii=False,indent=4)+"\n\nOutput:\n"},
+                {"role": "user", "content": "# Input\n"+json.dumps(flows_d,ensure_ascii=False,indent=4)+"\n\n# Output\n"},
                 ]
         response = client.chat.completions.create(model=model, messages=messages)
         logger.info(f"make_templates.py\n{response.choices[0].message.content}")

@@ -34,7 +34,7 @@ logger = setup_logger()
 - sentences: section, chapter, reportオブジェクト
     - object.sentenceNum_to_sentence_d, object.sentenceNum_to_datafactIndex_dを修正したものを出力
 """
-def format_sentences(s_obj, papaer_name, df_meta_info, model='gpt-4o'):
+def format_sentences(s_obj, papaer_name, df_meta_info, model='o1-mini'):
     print(f"\n{datetime.fromtimestamp(time.time())}::文章の編集を開始\nmodel = {model}")
     sentences_num = len(s_obj.sentenceNum_to_sentence_d)
     draft = dict([
@@ -51,6 +51,7 @@ def format_sentences(s_obj, papaer_name, df_meta_info, model='gpt-4o'):
         "drilldown_path":drilldown_path,
         "paper_name":papaer_name,
         "table_description":df_meta_info.df_description,
+        "analysis_goal":df_meta_info.analysis_goal,
     }
     client = OpenAI(api_key=API_KEY)
     prompt = Template(BASE_PROMPT).render(data)

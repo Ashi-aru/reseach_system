@@ -37,18 +37,18 @@ datafact1 = Datafact(
     ],
 )
 
-datafact2 = Datafact(
+Datafact(
     subject=[{"大分類":"サービス業"}, "年", [2022]],
     operation=[
         "ScalarArithmetic", 
         "/",
         Datafact(
             subject=[{"大分類":"サービス業"}, "年", [2022]],
-            operation=["Aggregation", "売上", "sum_percent"]
+            operation=["Aggregation", "売上", "sum"]
         ),
         Datafact(
             subject=[{"大分類":"サービス業"}, "年", [2021]],
-            operation=["Aggregation", "売上", "sum_percent"]
+            operation=["Aggregation", "売上", "sum"]
         )
     ]
 )

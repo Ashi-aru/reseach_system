@@ -69,4 +69,8 @@ def cal_subtree_nodes(s_node, manager, ordinal_d, df_meta_info):
         logger.info(f'\n====================================step_{step_n}===============================\n')
         dfs(node=s_node,df=df,step_n=step_n)
     e = time.time()
+    datafact_n = 0
+    for k,v in manager.results.items():
+        datafact_n += len(v)
+    print(f"全datafact数: {datafact_n}")
     print(f"{datetime.fromtimestamp(time.time())}::各ノードの計算を終了。\n計算時間 = {e-s}s")

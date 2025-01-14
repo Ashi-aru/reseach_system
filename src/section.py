@@ -72,7 +72,8 @@ class Section:
             value = manager.search_result(datafact.subject, datafact.operation)
             if(value is None):
                 return None
-            logger.info(f"section.py::datafact{n+1}={template.render(value=value)}\tvalue={value}")
+            logger.info(f"section.py::datafact={template.render(value=value)}\tvalue={value}")
+            # logger.info(f"section.py::datafact{n}={template.render(value=value)}\tvalue={value}")
             return template.render(value=value)
         """
         各文からsectionの文章を生成する関数
@@ -90,7 +91,8 @@ class Section:
                 "drilldown_path":drilldown_path,
                 "agg_attr":self.attr_and_f_tuple[0],
                 "agg_f":self.attr_and_f_tuple[1],
-                "table_description":df_meata_info.df_description
+                "table_description":df_meata_info.df_description,
+                "analysis_goal":df_meata_info.analysis_goal,
             }
             client = OpenAI(api_key=API_KEY)
             prompt = Template(BASE_PROMPT).render(data)
@@ -108,9 +110,9 @@ class Section:
             print(f"{datetime.fromtimestamp(time.time())}::節の文章生成を終了")
             return [content, messages]
         
-        make_templates(datafact_l, manager, ordinal_d, table_description, model="o1-mini") 
+        make_templates(datafact_l, manager, ordinal_d, table_description, model="o1-preview") 
         self.based_datafact_text_l = [render_sentence(datafact, i) for i, datafact in enumerate(datafact_l)]
-        content, messages = make_section_sentences(self.based_datafact_text_l, df_meta_info, model='gpt-4o')
+        content, messages = make_section_sentences(self.based_datafact_text_l, df_meta_info, model='o1-mini')
         # ambiguous_datafact = [datafact_l[i] for i in content["ambiguous_datafact"]]
         # if(ambiguous_datafact!=[]):
         #     make_templates(ambiguous_datafact, manager, ordinal_d, table_description, model="o1-preview")
